@@ -41,7 +41,44 @@ const eventMap={고기:['회식','환영회','송별회','프로젝트 회식','
 let data=[];Object.entries(names).forEach(([cat,arr],ci)=>arr.forEach((name,j)=>{const angle=(ci*31+j*57)*Math.PI/180,km=.35+((j*.67+ci*.19)%4.3),lat=YK.lat+(km/111)*Math.cos(angle),lng=YK.lng+(km/(111*Math.cos(YK.lat*Math.PI/180)))*Math.sin(angle),room=['한식','중식','일식','고기','샤브샤브'].includes(cat)&&j%2===0,parking=['한식','중식','양식','샤브샤브','고기','Bar'].includes(cat)&&j%3!==1,capacity=[8,12,16,24,36,50][(j+ci)%6],tags=[...(room?['프라이빗룸']:[]),...(parking?['주차 가능']:[]),...(capacity>=24?['단체석']:[]),quiet[cat][j%quiet[cat].length]];data.push({name,category:cat,distance:+km.toFixed(1),price:prices[cat]+(j-2)*2500,capacity,atmospheres:quiet[cat],events:eventMap[cat],room,parking,rating:+(4.1+((j*3+ci)%8)/10).toFixed(1),tags,lat,lng})}));
 const bvals=[15000,30000,50000,70000,100000];let state={cat:'전체',budget:50000,room:false,parking:false},rows=[],map,companyMarker,markers=[],routeLine,infoWindow;
 const $=x=>document.getElementById(x),won=n=>new Intl.NumberFormat('ko-KR').format(n)+'원';
-function initMap(){map=new naver.maps.Map('naverMap',{center:new naver.maps.LatLng(YK.lat,YK.lng),zoom:14,zoomControl:true,zoomControlOptions:{position:naver.maps.Position.TOP_RIGHT}});companyMarker=new naver.maps.Marker({position:new naver.maps.LatLng(YK.lat,YK.lng),map,title:YK.name,icon:{content:'<div style="background:#ffd43b;color:#28261b;border:3px solid white;border-radius:14px;padding:7px 9px;font-weight:900;box-shadow:0 4px 12px #0004">YK</div>',anchor:new naver.maps.Point(22,22)}});}
+function initMap() {
+    if (map) return;
+
+    const mapElement = document.getElementById('naverMap');
+
+    if (!mapElement || typeof naver === 'undefined') {
+        console.error('네이버 지도 SDK 또는 지도 영역을 찾을 수 없습니다.');
+        return;
+    }
+
+    map = new naver.maps.Map('naverMap', {
+        center: new naver.maps.LatLng(YK.lat, YK.lng),
+        zoom: 14,
+        zoomControl: true,
+        zoomControlOptions: {
+            position: naver.maps.Position.TOP_RIGHT
+        }
+    });
+
+    companyMarker = new naver.maps.Marker({
+        position: new naver.maps.LatLng(YK.lat, YK.lng),
+        map: map,
+        title: YK.name,
+        icon: {
+            content:
+                '<div style="' +
+                'background:#ffd43b;' +
+                'color:#28261b;' +
+                'border:3px solid white;' +
+                'border-radius:14px;' +
+                'padding:7px 9px;' +
+                'font-weight:900;' +
+                'box-shadow:0 4px 12px #0004' +
+                '">YK</div>',
+            anchor: new naver.maps.Point(22, 22)
+        }
+    });
+}
 function size(n){return n<=8?'일반 회식 · 8명 이하':n<=20?'중규모 회식 · 9~20명':'대규모 회식 · 21~50명'}
 function ctl(){$('chips').innerHTML=categories.map(x=>`<button data-c="${x}" class="chip ${state.cat===x?'on':''}">${x}</button>`).join('');document.querySelectorAll('[data-c]').forEach(x=>x.onclick=()=>{state.cat=x.dataset.c;ctl()});$('budgets').innerHTML=bvals.map(x=>`<button data-b="${x}" class="budget ${state.budget===x?'on':''}">${won(x)} ${x<100000?'이하':'이상'}</button>`).join('');document.querySelectorAll('[data-b]').forEach(x=>x.onclick=()=>{state.budget=+x.dataset.b;ctl()});$('room').classList.toggle('on',state.room);$('parking').classList.toggle('on',state.parking)}
 function people(){let n=+$('people').value||2;n=Math.max(2,Math.min(50,n));$('people').value=n;$('size').textContent=size(n);return n}
