@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>YK Team Dinner Planner v6.0</title>
+<title>YK Team Dinner Planner v7.0</title>
 <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qpwpk81lu0"></script>
 <style>
 :root{--y:#ffd43b;--ink:#28261b;--muted:#746e58;--line:#e4d8a5;--green:#147154;--red:#c7463b;--shadow:0 14px 38px #44360018}
@@ -21,7 +21,7 @@
 <header class="top"><div class="topin"><div class="brand"><div class="logo">🍽️</div><div><h1>YK Team Dinner Planner</h1><p>우리 모임에 맞는 장소를 30초 만에</p></div></div><div class="loc">📍 서울시 송파구 올림픽로 300 기준</div></div></header>
 <main class="app"><aside class="panel"><h2>모임 조건 설정</h2><p class="hint">참석 인원, 모임 성격에 맞춰 최적의 장소를 추천합니다.</p>
 <div class="sec"><label class="label">👥 참석 인원</label><div class="people"><input id="people" class="input" type="number" min="2" max="50" value="12"><div class="unit">명</div></div><div id="size" class="size"></div></div>
-<div class="sec"><label class="label">🎯 모임 성격</label><select id="event" class="select"><option value="팀 점심">팀 점심 (가성비·짧은 동선)</option><option value="회식" selected>회식 (대규모·적당한 소음)</option><option value="거래처 미팅">거래처 미팅 (룸·주차·조용함)</option><option value="동기 모임">동기 모임 (트렌디·MZ 감성)</option><option value="환영회/송별회">환영회/송별회 (특별한 메뉴·건배사)</option></select></div>
+<div class="sec"><label class="label">🎯 모임 성격</label><select id="event" class="select"><option value="캐주얼 점심">캐주얼 점심 (가성비·짧은 동선)</option><option value="회식" selected>회식 (대규모·적당한 소음)</option><option value="거래처 미팅">거래처 미팅 (룸·주차·조용함)</option><option value="동기 모임">동기 모임 (트렌디·MZ 감성)</option></select></div>
 <div class="sec"><label class="label">🍜 음식 및 주류 카테고리</label><div id="chips" class="chips"></div></div>
 <div class="sec"><div class="rangeTop"><span>📍 검색 반경 (도보 기준)</span><span><b id="rtext">3</b>km</span></div><input id="radius" class="range" type="range" min="1" max="5" value="3"></div>
 <div class="sec toggles"><button id="room" class="toggle">🚪 룸 필수</button><button id="parking" class="toggle">🚗 주차 필수</button></div><button id="go" class="go">🔍 맞춤 장소 추천</button></aside>
@@ -32,6 +32,14 @@
 <script>
 const YK={lat:37.5125,lng:127.1027,name:'YK · 올림픽로 300'};
 const categories=['전체','고기','한식','중식','일식','양식','샤브샤브','치킨','이자카야','Bar','호프','포차'];
+
+// 모임 성격별 맞춤 검색어 매핑 정의
+const personaQueries = {
+    '캐주얼 점심': ['잠실 점심 회식', '잠실 직장인 점심', '잠실 가성비 맛집'],
+    '회식': ['잠실 회식장소 추천', '잠실 단체 회식 추천', '잠실 회식 추천'],
+    '거래처 미팅': ['잠실 프라이빗 맛집 추천', '잠실 고급 맛집 추천', '잠실 가격대 있는 맛집'],
+    '동기 모임': ['잠실 송리단길 핫플', '잠실 mz 핫플', '잠실 mz 맛집']
+};
 
 let state={cat:'전체',room:false,parking:false},rows=[],data=[],map,companyMarker,markers=[],routeLine,infoWindow;
 const $=x=>document.getElementById(x);
@@ -47,7 +55,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return straight * 1.3; // 도보 우회 계수
 }
 
-// 엄격한 카테고리 분류 함수 (한식에 고기/일식이 섞이는 현상 원천 차단)
+// 엄격한 카테고리 분류 함수
 function matchesCategory(categoryStr, titleStr, targetCat) {
     const full = (categoryStr + " " + titleStr).toLowerCase();
     
@@ -141,28 +149,19 @@ function render(){
     $('range').textContent=rad+'km';
     $('scale').textContent=size(n);
     
-    // 모임 성격별 가중치 및 필터 적용
     rows = data.filter(r => {
-        // 1. 반경 필터 (팀 점심일 경우 자동으로 1.2km 이내로 엄격 제한)
-        const maxDist = (event === '팀 점심') ? Math.min(rad, 1.2) : rad;
+        const maxDist = (event === '캐주얼 점심') ? Math.min(rad, 1.2) : rad;
         if (r.distance > maxDist) return false;
-
-        // 2. 카테고리 엄격 분리 필터
         if (!matchesCategory(r.category, r.name, state.cat)) return false;
-
-        // 3. 거래처 미팅일 경우 룸 필수 자동 반영 유도 또는 하드필터
         if (state.room && !r.room) return false;
         if (state.parking && !r.parking) return false;
-
         return true;
     }).map(r => {
         let s = 100 - (r.distance * 12);
-        
-        // 모임 성격별 맞춤 가점 부여
         if (event === '거래처 미팅' && r.room) s += 30;
         if (event === '회식' && r.capacity >= n) s += 20;
         if (event === '동기 모임' && ['이자카야', 'Bar', '양식', '호프'].includes(r.category)) s += 25;
-        if (event === '환영회/송별회' && ['고기', '일식', '양식'].includes(r.category)) s += 25;
+        if (event === '캐주얼 점심' && r.distance <= 1.0) s += 25;
 
         return { ...r, score: Math.max(1, Math.min(99, Math.round(s))) };
     }).sort((a,b)=> b.score - a.score).slice(0,10);
@@ -229,7 +228,6 @@ $('parking').onclick=()=>{
     if(data.length>0)render();
 };
 
-// 모임 성격 바뀔 때 거래처 미팅이면 룸/주차 자동 켜기 UX 편의 기능 제공
 $('event').onchange = (e) => {
     if(e.target.value === '거래처 미팅') {
         state.room = true;
@@ -239,29 +237,65 @@ $('event').onchange = (e) => {
     if(data.length > 0) render();
 };
 
+// --- 스마트 다중 키워드 리스트업 및 카테고리별 보장 검색 알고리즘 ---
 $('go').onclick = async () => {
     const btn = $('go');
     btn.textContent = "맞춤 맛집 검색 중... ⏳";
     btn.style.opacity = '0.7';
 
     try {
-        const targetCategory = state.cat === '전체' ? '회식' : state.cat;
-        const searchKeyword = `잠실 ${targetCategory} 맛집`;
+        const selectedEvent = $('event').value;
+        const queries = personaQueries[selectedEvent] || ['잠실 회식 추천'];
         
-        const items = await getRealRestaurants(searchKeyword);
-        
-        if (items && items.length > 0) {
-            data = items.map((item) => {
+        let allItems = [];
+        let seenNames = new Set();
+
+        // 1. 모임 성격에 해당하는 키워드들로 후보군을 대량 리스트업 (중복 제거)
+        for (const q of queries) {
+            const items = await getRealRestaurants(q);
+            for (const item of items) {
+                const cleanName = item.title.replace(/<[^>]+>/g, '');
+                if (!seenNames.has(cleanName)) {
+                    seenNames.add(cleanName);
+                    allItems.push({ ...item, cleanName });
+                }
+            }
+        }
+
+        // 2. 만약 특정 카테고리를 골랐는데 리스트업된 결과 중 해당 카테고리가 3개 미만이면, 카테고리 집중 보완 검색 추가 실행
+        if (state.cat !== 'e.g. 전체' && state.cat !== '전체') {
+            const matchedCount = allItems.filter(item => {
+                const catParts = item.category ? item.category.split('>') : ['기타'];
+                return matchesCategory(catParts[catParts.length - 1], item.cleanName, state.cat);
+            }).length;
+
+            if (matchedCount < 3) {
+                const extraQuery = `잠실 ${state.cat} 맛집`;
+                const extraItems = await getRealRestaurants(extraQuery);
+                for (const item of extraItems) {
+                    const cleanName = item.title.replace(/<[^>]+>/g, '');
+                    if (!seenNames.has(cleanName)) {
+                        seenNames.add(cleanName);
+                        allItems.push({ ...item, cleanName });
+                    }
+                }
+            }
+        }
+
+        if (allItems.length > 0) {
+            data = allItems.map((item) => {
                 const lng = parseInt(item.mapx) / 10000000;
                 const lat = parseInt(item.mapy) / 10000000;
                 
-                const cleanName = item.title.replace(/<[^>]+>/g, ''); 
+                const cleanName = item.cleanName; 
                 const catParts = item.category ? item.category.split('>') : ['기타'];
                 const categoryName = catParts[catParts.length - 1];
                 
                 const fullText = (cleanName + " " + item.category + " " + (item.description || "") + " " + item.roadAddress).toLowerCase();
-                const hasRoom = fullText.includes('룸') || fullText.includes('개별') || fullText.includes('단체석') || fullText.includes('프라이빗') || fullText.includes('좌식');
-                const hasParking = fullText.includes('주차') || fullText.includes('발렛') || fullText.includes('파킹');
+                
+                // 요청하신 정확한 룸/주차 판별 키워드 적용
+                const hasRoom = fullText.includes('개별 룸') || fullText.includes('개별룸') || fullText.includes('프라이빗룸');
+                const hasParking = fullText.includes('주차 가능');
                 
                 const dist = parseFloat(calculateDistance(YK.lat, YK.lng, lat, lng).toFixed(1));
                 
