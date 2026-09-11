@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>YK Team Dinner Planner v4.2</title>
+<title>YK Team Dinner Planner v5.0</title>
 <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qpwpk81lu0"></script>
 <style>
 :root{--y:#ffd43b;--ink:#28261b;--muted:#746e58;--line:#e4d8a5;--green:#147154;--red:#c7463b;--shadow:0 14px 38px #44360018}
@@ -77,61 +77,70 @@ function initMap() {
 function size(n){return n<=8?'일반 회식 · 8명 이하':n<=20?'중규모 회식 · 9~20명':'대규모 회식 · 21~50명'}
 function ctl(){
     $('chips').innerHTML=categories.map(x=>`<button data-c="${x}" class="chip ${state.cat===x?'on':''}">${x}</button>`).join('');
-    document.querySelectorAll('[data-c]').forEach(x=>x.onclick=()=>{state.cat=x.dataset.c;ctl()});
+    document.querySelectorAll('[data-c]').forEach(x=>x.onclick=()=>{state.cat=x.dataset.c;ctl();if(data.length>0)render();});
     $('room').classList.toggle('on',state.room);
     $('parking').classList.toggle('on',state.parking);
 }
 function people(){let n=+$('people').value||2;n=Math.max(2,Math.min(50,n));$('people').value=n;$('size').textContent=size(n);return n}
 
-// 피드백 2 반영: 네이버 통합검색에 '가게이름'만 검색되도록 수정
-function navSearch(n){return 'https://search.naver.com/search.naver?query='+encodeURIComponent(n)}
-
-// 피드백 3 반영: 먹통이 되던 길찾기 대신 네이버 지도 실제 장소 검색/위치 페이지로 안정적 연결
 function directions(r){return 'https://map.naver.com/p/search/'+encodeURIComponent(r.name)}
 
 function clearMap(){markers.forEach(m=>m.setMap(null));markers=[];if(routeLine)routeLine.setMap(null);if(infoWindow)infoWindow.close()}
 
 function render(){
-    const n=people(),rad=+$('radius').value,event=$('event').value;
-    $('range').textContent=rad+'km';$('scale').textContent=size(n);
+    const n=people(),rad=+$('radius').value;
+    $('range').textContent=rad+'km';
+    $('scale').textContent=size(n);
     
-    // 피드백 1 반영: 선택한 카테고리가 '전체'가 아닐 경우, 카테고리 일치 여부를 철저하게 필터링하여 다른 카테고리와 섞이지 않도록 함
+    // 엄격한 조건 필터링 (반경, 카테고리 철저 분리, 룸/주차 필수 조건 하드 필터)
     rows = data.filter(r => {
-        const matchDist = r.distance <= rad;
-        const matchCat = (state.cat === '전체') || (r.category && r.category.includes(state.cat));
-        return matchDist && matchCat;
+        // 1. 반경 필터 (설정한 거리 이내만 통과)
+        if (r.distance > rad) return false;
+
+        // 2. 카테고리 엄격 분리 필터 (고기와 한식 등이 서로 섞이지 않도록 정밀 매칭)
+        if (state.cat !== '전체') {
+            const catStr = (r.category + " " + r.name).toLowerCase();
+            const targetCat = state.cat.toLowerCase();
+            if (targetCat === '고기') {
+                if (!catStr.includes('고기') && !catStr.includes('육류') && !catStr.includes('삼겹살') && !catStr.includes('구이') && !catStr.includes('한우') && !catStr.includes('갈비')) return false;
+            } else if (targetCat === '한식') {
+                // 한식일 때는 고기 전문점이나 이자카야 등이 섞이지 않도록 제외 처리
+                if (catStr.includes('고기') || catStr.includes('육류') || catStr.includes('이자카야') || catStr.includes('양식') || catStr.includes('중식') || catStr.includes('일식')) return false;
+            } else {
+                if (!catStr.includes(targetCat)) return false;
+            }
+        }
+
+        // 3. 룸 필수 토글 엄격 필터
+        if (state.room && !r.room) return false;
+
+        // 4. 주차 필수 토글 엄격 필터
+        if (state.parking && !r.parking) return false;
+
+        return true;
     }).map(r => {
-        let s = 50;
-        s += Math.max(0, 30 - r.distance * 6);
-        if (state.room) s += r.room ? 25 : -25;
-        if (state.parking) s += r.parking ? 20 : -20;
-        if (r.events && r.events.includes(event)) s += 10;
+        // 가까울수록 높은 점수 부여
+        let s = 100 - (r.distance * 15);
         return { ...r, score: Math.max(1, Math.min(99, Math.round(s))) };
-    }).sort((a,b)=>b.score-a.score).slice(0,10);
-    
-    if(rows.length === 0 && data.length > 0) {
-        rows = [...data].sort((a,b)=>b.score-a.score).slice(0,5);
-    }
+    }).sort((a,b)=>b.distance - a.distance === 0 ? b.score - a.score : a.distance - b.distance).slice(0,10);
 
     $('count').textContent=rows.length+'곳';
     $('hint').textContent=`${state.cat==='전체'?'전체':state.cat} 후보 ${rows.length}개`;
-    $('guide').querySelector('span').textContent=rows.length>3?`후보 ${rows.length}개 · 목록 안에서 아래로 스크롤해 모두 확인하세요.`:`후보 ${rows.length}개가 표시되었습니다.`;
+    $('guide').querySelector('span').textContent=rows.length>0?`조건에 맞는 식당 ${rows.length개가 검색되었습니다.`:`조건에 맞는 식당이 없습니다. 반경이나 조건을 넓혀보세요.`;
     
-    // 피드백 2 반영: 거대한 가격박스를 없애고, 다른 버튼들과 나란히 들어가는 깔끔하고 작은 버튼들로 배치
     $('list').innerHTML=rows.length?rows.map((r,i)=>`
         <article class="item" data-i="${i}">
             <div class="rank">${i+1}</div>
             <div>
                 <div class="name"><h3>${r.name}</h3><span class="cat">${r.category}</span></div>
-                <div class="meta"><span>📍 ${r.distance}km</span><span>👥 추천인원 ${n}명</span></div>
+                <div class="meta"><span>📍 직선거리 ${r.distance}km</span><span>👥 추천인원 ${n}명</span></div>
                 <div class="tags">${r.tags.map(t=>`<span class="tag">✓ ${t}</span>`).join('')}</div>
                 <div class="why"><b>${r.address}</b></div>
                 <div class="actions">
-                    <a onclick="event.stopPropagation()" target="_blank" href="${navSearch(r.name)}">🔍 네이버 검색</a>
                     <a onclick="event.stopPropagation()" target="_blank" href="${directions(r)}">🗺️ 지도에서 보기</a>
                 </div>
             </div>
-        </article>`).join(''):`<div class="empty">조건에 맞는 후보가 없습니다. 반경이나 조건을 넓혀보세요.</div>`;
+        </article>`).join(''):`<div class="empty">선택하신 조건(반경 ${rad}km, 룸/주차 등)을 모두 충족하는 식당이 없습니다.<br>검색 반경을 넓히거나 조건을 조절해 보세요.</div>`;
     
     clearMap();
     const bounds=new naver.maps.LatLngBounds(new naver.maps.LatLng(YK.lat,YK.lng),new naver.maps.LatLng(YK.lat,YK.lng));
@@ -159,10 +168,17 @@ function select(i){
 }
 
 $('people').oninput=people;
-$('radius').oninput=()=>$('rtext').textContent=$('radius').value;
-$('room').onclick=()=>{state.room=!state.room;ctl()};
-$('parking').onclick=()=>{state.parking=!state.parking;ctl()};
 
+// 반경 슬라이더 실시간 연동 (슬라이더 움직일 때마다 즉시 필터링 적용)
+$('radius').oninput=()=>{
+    $('rtext').textContent=$('radius').value;
+    if(data.length > 0) render();
+};
+
+$('room').onclick=()=>{state.room=!state.room;ctl();if(data.length>0)render();};
+$('parking').onclick=()=>{state.parking=!state.parking;ctl();if(data.length>0)render();};
+
+// --- 순수 검색 쿼리 고도화 (모임성격/분위기는 검색창에 넣지 않고 오직 위치+카테고리만 질의) ---
 $('go').onclick = async () => {
     const btn = $('go');
     const originalText = btn.textContent;
@@ -170,8 +186,8 @@ $('go').onclick = async () => {
     btn.style.opacity = '0.7';
 
     try {
-        const catQuery = state.cat === '전체' ? '맛집' : state.cat;
-        const searchKeyword = `잠실 ${catQuery} ${$('event').value}`.replace(/\s+/g, ' ').trim();
+        // 네이버 API에는 '잠실 [카테고리] 맛집' 형태의 순수 키워드만 전달
+        const searchKeyword = `잠실 ${state.cat === '전체' ? '회식' : state.cat} 맛집`;
         const items = await getRealRestaurants(searchKeyword);
         
         if (items && items.length > 0) {
@@ -203,8 +219,7 @@ $('go').onclick = async () => {
                     tags: tags,
                     lat: lat,
                     lng: lng,
-                    address: item.roadAddress || item.address,
-                    events: [$('event').value, '회식']
+                    address: item.roadAddress || item.address
                 };
             });
         } else {
