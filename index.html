@@ -3,46 +3,40 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>YK Team Dinner Planner v3.0</title>
+<title>YK Team Dinner Planner v4.0</title>
 <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qpwpk81lu0"></script>
 <style>
 :root{--y:#ffd43b;--ink:#28261b;--muted:#746e58;--line:#e4d8a5;--green:#147154;--red:#c7463b;--shadow:0 14px 38px #44360018}
 *{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:Pretendard,"Noto Sans KR",Arial,sans-serif;background:linear-gradient(#fff6c3,#f6f3e9);color:var(--ink)}button,input,select{font:inherit}button{cursor:pointer}
 .top{height:88px;background:#28261b;color:#fff;border-bottom:6px solid var(--y)}.topin{height:100%;max-width:1600px;margin:auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:13px}.logo{width:57px;height:57px;border-radius:18px;background:var(--y);display:grid;place-items:center;font-size:38px}.brand h1{margin:0;font-size:21px}.brand p{margin:4px 0 0;color:#d9d2b8;font-size:12px}.loc{color:#e6dfc0;font-size:13px}
-.app{height:calc(100vh - 88px);max-width:1600px;margin:auto;padding:20px;display:grid;grid-template-columns:410px minmax(0,1fr);gap:18px}.panel,.work{background:#fffefb;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);min-height:0}.panel{padding:22px;overflow:auto}.panel h2{margin:0;font-size:20px}.hint{color:var(--muted);font-size:11px;line-height:1.5;margin:6px 0}.sec{margin-top:17px}.label{display:block;font-size:13px;font-weight:850;margin-bottom:7px}.people{display:grid;grid-template-columns:1fr 70px;gap:8px}.input,.select{width:100%;background:#fff;border:1px solid var(--line);padding:11px 12px;border-radius:11px;outline:none}.input{font-weight:850;font-size:17px}.unit{display:grid;place-items:center;background:#f2edda;border-radius:11px;font-weight:850}.size{margin-top:7px;background:#fff3b2;color:#705300;padding:8px 10px;border-radius:9px;font-size:10px;font-weight:850}.chips{display:flex;flex-wrap:wrap;gap:5px}.chip,.budget,.toggle{border:1px solid transparent;border-radius:9px;padding:8px 9px;background:#f1eddf;color:#5e5746;font-size:10px;font-weight:850}.chip.on{background:#28261b;color:#fff}.budgets{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.budget{background:#fff;border-color:var(--line);padding:8px 3px}.budget.on{background:#fff1a8;border-color:#d7a900;color:#6f5200}.rangeTop{display:flex;justify-content:space-between;font-size:12px;font-weight:850}.range{width:100%;accent-color:#d29f00}.toggles{display:grid;grid-template-columns:1fr 1fr;gap:6px}.toggle{background:#fff;border-color:var(--line)}.toggle.on{background:#28261b;color:var(--y)}.go{width:100%;border:0;background:var(--y);padding:13px;border-radius:13px;font-weight:950;margin-top:17px;box-shadow:0 9px 20px #d19c0033;transition:all 0.2s}
-.work{overflow:hidden}.welcome{height:100%;display:grid;place-items:center;text-align:center;background:radial-gradient(circle,#fff2a8,#fffdf5 39%,#fff 74%)}.wicon{width:100px;height:100px;border-radius:30px;background:var(--y);display:grid;place-items:center;font-size:59px;margin:auto}.welcome h2{font-size:29px;margin:24px 0 8px}.welcome p{color:var(--muted);font-size:13px;line-height:1.6}.results{display:none;height:100%;padding:16px;overflow:hidden}.results.show{display:flex;flex-direction:column}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.metric{border:1px solid var(--line);border-radius:16px;padding:12px;background:#fff}.metric small{display:block;color:var(--muted);font-size:9px}.metric strong{display:block;font-size:18px;margin-top:4px}.metric span{display:block;color:#9b9277;font-size:8px;margin-top:4px}.body{display:grid;grid-template-columns:.88fr 1.12fr;gap:11px;margin-top:10px;flex:1;min-height:0}
+.app{height:calc(100vh - 88px);max-width:1600px;margin:auto;padding:20px;display:grid;grid-template-columns:410px minmax(0,1fr);gap:18px}.panel,.work{background:#fffefb;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);min-height:0}.panel{padding:22px;overflow:auto}.panel h2{margin:0;font-size:20px}.hint{color:var(--muted);font-size:11px;line-height:1.5;margin:6px 0}.sec{margin-top:17px}.label{display:block;font-size:13px;font-weight:850;margin-bottom:7px}.people{display:grid;grid-template-columns:1fr 70px;gap:8px}.input,.select{width:100%;background:#fff;border:1px solid var(--line);padding:11px 12px;border-radius:11px;outline:none}.input{font-weight:850;font-size:17px}.unit{display:grid;place-items:center;background:#f2edda;border-radius:11px;font-weight:850}.size{margin-top:7px;background:#fff3b2;color:#705300;padding:8px 10px;border-radius:9px;font-size:10px;font-weight:850}.chips{display:flex;flex-wrap:wrap;gap:5px}.chip,.toggle{border:1px solid transparent;border-radius:9px;padding:8px 9px;background:#f1eddf;color:#5e5746;font-size:10px;font-weight:850}.chip.on{background:#28261b;color:#fff}.rangeTop{display:flex;justify-content:space-between;font-size:12px;font-weight:850}.range{width:100%;accent-color:#d29f00}.toggles{display:grid;grid-template-columns:1fr 1fr;gap:6px}.toggle{background:#fff;border-color:var(--line)}.toggle.on{background:#28261b;color:var(--y)}.go{width:100%;border:0;background:var(--y);padding:13px;border-radius:13px;font-weight:950;margin-top:17px;box-shadow:0 9px 20px #d19c0033;transition:all 0.2s}
+.work{overflow:hidden}.welcome{height:100%;display:grid;place-items:center;text-align:center;background:radial-gradient(circle,#fff2a8,#fffdf5 39%,#fff 74%)}.wicon{width:100px;height:100px;border-radius:30px;background:var(--y);display:grid;place-items:center;font-size:59px;margin:auto}.welcome h2{font-size:29px;margin:24px 0 8px}.welcome p{color:var(--muted);font-size:13px;line-height:1.6}.results{display:none;height:100%;padding:16px;overflow:hidden}.results.show{display:flex;flex-direction:column}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.metric{border:1px solid var(--line);border-radius:16px;padding:12px;background:#fff}.metric small{display:block;color:var(--muted);font-size:9px}.metric strong{display:block;font-size:18px;margin-top:4px}.metric span{display:block;color:#9b9277;font-size:8px;margin-top:4px}.body{display:grid;grid-template-columns:.88fr 1.12fr;gap:11px;margin-top:10px;flex:1;min-height:0}
 .mapwrap{position:relative;border:1px solid var(--line);border-radius:20px;overflow:hidden;min-height:600px}#naverMap{position:absolute;inset:0;width:100%;height:100%;min-height:600px;}.mapnote{position:absolute;left:13px;top:13px;background:#fff;padding:9px 11px;border-radius:11px;font-size:9px;box-shadow:0 7px 18px #0002;z-index:10}.routebox{position:absolute;left:13px;right:13px;bottom:13px;background:#28261bf2;color:#fff;padding:11px 13px;border-radius:13px;z-index:10;border:1px solid #ffd43b88}.routebox.hidden{display:none}.routebox b{color:var(--y);font-size:11px}.rmeta{display:flex;gap:11px;flex-wrap:wrap;margin-top:5px;font-size:9px}.rnote{color:#cbc4a7;font-size:7px;margin-top:5px}
 .recommend{display:flex;flex-direction:column;min-width:0;min-height:0}.rhead{display:flex;justify-content:space-between;align-items:end;padding:0 1px 7px}.eye{font-size:9px;color:#927000;font-weight:900}.rhead h2{font-size:19px;margin:3px 0 0}.rhead small{font-size:9px;color:var(--muted)}.scrollguide{display:flex;justify-content:space-between;align-items:center;background:#fff6c2;color:#705700;border:1px solid #e8cf65;border-radius:9px;padding:7px 9px;font-size:8px;font-weight:850;margin-bottom:6px}.arrow{font-size:13px;animation:bob 1.2s infinite}@keyframes bob{50%{transform:translateY(3px)}}.list{display:grid;gap:7px;overflow-y:scroll;min-height:0;padding-right:10px;scrollbar-color:#bd9100 #f1ecd9;scrollbar-width:auto}.list::-webkit-scrollbar{width:12px}.list::-webkit-scrollbar-track{background:#f1ecd9;border-radius:9px}.list::-webkit-scrollbar-thumb{background:#bd9100;border-radius:9px;border:3px solid #f1ecd9}
-.item{border:1px solid var(--line);border-radius:17px;background:#fff;padding:12px;display:grid;grid-template-columns:36px 1fr 120px;gap:9px;cursor:pointer;transition:.16s}.item:hover{border-color:#cda82f;transform:translateY(-1px)}.item.selected{border:2px solid #d2a300;background:#fffdf1;box-shadow:0 8px 20px #b2840025}.rank{width:34px;height:34px;border-radius:11px;background:#28261b;color:var(--y);display:grid;place-items:center;font-weight:950}.name{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.name h3{font-size:13px;margin:0}.cat{font-size:7px;background:#f2edde;padding:4px 5px;border-radius:6px}.meta{display:flex;gap:7px;flex-wrap:wrap;color:var(--muted);font-size:8px;margin-top:5px}.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}.tag{background:#fff3b4;color:#705400;border-radius:6px;padding:4px 5px;font-size:7px;font-weight:850}.why{font-size:8px;color:#6b6450;line-height:1.4;margin-top:6px}.actions{display:flex;gap:4px;margin-top:7px}.actions a{font-size:8px;text-decoration:none;color:#353126;border:1px solid var(--line);padding:5px 6px;border-radius:7px;font-weight:850}.cost{background:#faf6e8;border-radius:11px;padding:9px}.cost small{display:block;font-size:7px;color:var(--muted)}.score{font-size:18px;color:#977000;font-weight:950;margin-bottom:6px}.cost strong{display:block;font-size:13px;margin:3px 0 6px}.status{font-size:7px;font-weight:900;padding:6px;border-radius:7px;margin-top:7px}.ok{background:#dcf2e7;color:var(--green)}.over{background:#fbe0dd;color:var(--red)}.empty{padding:35px;text-align:center;color:var(--muted);border:1px solid var(--line);border-radius:15px}
-@media(max-width:1100px){.app{height:auto;grid-template-columns:1fr}.work{min-height:720px}.body{grid-template-columns:1fr}.mapwrap{min-height:300px}.results{overflow:auto}.list{max-height:650px}}@media(max-width:680px){.top{height:auto}.topin{padding:14px}.loc{display:none}.app{padding:11px}.metrics{grid-template-columns:1fr 1fr}.budgets{grid-template-columns:1fr 1fr}.item{grid-template-columns:34px 1fr}.cost{grid-column:1/-1}}
+.item{border:1px solid var(--line);border-radius:17px;background:#fff;padding:12px;display:grid;grid-template-columns:36px 1fr 130px;gap:9px;cursor:pointer;transition:.16s}.item:hover{border-color:#cda82f;transform:translateY(-1px)}.item.selected{border:2px solid #d2a300;background:#fffdf1;box-shadow:0 8px 20px #b2840025}.rank{width:34px;height:34px;border-radius:11px;background:#28261b;color:var(--y);display:grid;place-items:center;font-weight:950}.name{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.name h3{font-size:13px;margin:0}.cat{font-size:7px;background:#f2edde;padding:4px 5px;border-radius:6px}.meta{display:flex;gap:7px;flex-wrap:wrap;color:var(--muted);font-size:8px;margin-top:5px}.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}.tag{background:#fff3b4;color:#705400;border-radius:6px;padding:4px 5px;font-size:7px;font-weight:850}.why{font-size:8px;color:#6b6450;line-height:1.4;margin-top:6px}.actions{display:flex;gap:4px;margin-top:7px}.actions a{font-size:8px;text-decoration:none;color:#353126;border:1px solid var(--line);padding:5px 6px;border-radius:7px;font-weight:850}.pricebox{background:#faf6e8;border-radius:11px;padding:9px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}.pricebox a{display:block;width:100%;background:#28261b;color:#ffd43b;text-decoration:none;font-weight:850;font-size:9px;padding:7px;border-radius:8px;margin-top:6px;text-align:center}.empty{padding:35px;text-align:center;color:var(--muted);border:1px solid var(--line);border-radius:15px}
+@media(max-width:1100px){.app{height:auto;grid-template-columns:1fr}.work{min-height:720px}.body{grid-template-columns:1fr}.mapwrap{min-height:300px}.results{overflow:auto}.list{max-height:650px}}@media(max-width:680px){.top{height:auto}.topin{padding:14px}.loc{display:none}.app{padding:11px}.metrics{grid-template-columns:1fr 1fr}.item{grid-template-columns:34px 1fr}.pricebox{grid-column:1/-1}}
 </style>
 </head>
 <body>
 <header class="top"><div class="topin"><div class="brand"><div class="logo">🍽️</div><div><h1>YK Team Dinner Planner</h1><p>우리 모임에 맞는 장소를 30초 만에</p></div></div><div class="loc">📍 서울시 송파구 올림픽로 300 기준</div></div></header>
-<main class="app"><aside class="panel"><h2>모임 조건 설정</h2><p class="hint">인원, 모임 성격, 소음 수준과 예산을 반영해 추천합니다.</p>
+<main class="app"><aside class="panel"><h2>모임 조건 설정</h2><p class="hint">참석 인원, 모임 성격, 룸 및 주차 조건을 반영해 최적의 장소를 추천합니다.</p>
 <div class="sec"><label class="label">👥 참석 인원</label><div class="people"><input id="people" class="input" type="number" min="2" max="50" value="12"><div class="unit">명</div></div><div id="size" class="size"></div></div>
 <div class="sec"><label class="label">🎯 모임 성격</label><select id="event" class="select"><option>팀 점심</option><option>팀 저녁</option><option selected>회식</option><option>거래처 미팅</option><option>동기 모임</option><option>환영회</option><option>송별회</option><option>프로젝트 회식</option><option>송년회</option><option>임원 동행</option></select></div>
 <div class="sec"><label class="label">🔊 원하는 분위기</label><select id="atmos" class="select"><option>조용함</option><option selected>적당히 시끄러움</option><option>왁자지껄</option></select></div>
 <div class="sec"><label class="label">🍜 음식 및 주류 카테고리</label><div id="chips" class="chips"></div></div>
-<div class="sec"><label class="label">💰 1인당 예상 사용 예산</label><div id="budgets" class="budgets"></div></div>
 <div class="sec"><div class="rangeTop"><span>📍 검색 반경</span><span><b id="rtext">3</b>km</span></div><input id="radius" class="range" type="range" min="1" max="5" value="3"></div>
 <div class="sec toggles"><button id="room" class="toggle">🚪 룸 필수</button><button id="parking" class="toggle">🚗 주차 필수</button></div><button id="go" class="go">🔍 맞춤 장소 추천</button></aside>
-<section class="work"><div id="welcome" class="welcome"><div><div class="wicon">🍽️</div><h2>어떤 모임을 준비하고 있나요?</h2><p>왼쪽에서 조건을 입력한 뒤 맞춤 장소 추천을 눌러주세요.<br>오른쪽에서 모든 후보, 실제 네이버 지도와 예산을 비교할 수 있습니다.</p></div></div>
-<div id="results" class="results"><div class="metrics"><div class="metric"><small>총 사용 가능 예산</small><strong id="total"></strong><span id="formula"></span></div><div class="metric"><small>검색 범위</small><strong id="range"></strong><span>올림픽로 300 기준</span></div><div class="metric"><small>조건 적합 식당</small><strong id="count"></strong><span id="scale"></span></div><div class="metric"><small>선택 조건</small><strong id="ametric"></strong><span id="emetric"></span></div></div>
+<section class="work"><div id="welcome" class="welcome"><div><div class="wicon">🍽️</div><h2>어떤 모임을 준비하고 있나요?</h2><p>왼쪽에서 조건을 입력한 뒤 맞춤 장소 추천을 눌러주세요.<br>오른쪽에서 모든 후보, 실제 네이버 지도와 메뉴를 비교할 수 있습니다.</p></div></div>
+<div id="results" class="results"><div class="metrics"><div class="metric"><small>검색 기준</small><strong id="scale"></strong><span>올림픽로 300 기준</span></div><div class="metric"><small>검색 반경</small><strong id="range"></strong><span>설정 범위 내</span></div><div class="metric"><small>조건 적합 식당</small><strong id="count"></strong><span>실시간 검색 결과</span></div></div>
 <div class="body"><div class="mapwrap"><div id="naverMap"></div><div class="mapnote"><b>네이버 지도</b><br>카드를 클릭해 위치와 도보 예상 시간을 확인하세요.</div><div id="routebox" class="routebox hidden"><b id="rtitle"></b><div id="rmeta" class="rmeta"></div><div class="rnote">※ 도보 시간은 직선거리 기반 예상치입니다. 네이버 길찾기 버튼에서 실제 경로를 확인하세요.</div></div></div>
 <div class="recommend"><div class="rhead"><div><div class="eye">✦ 맞춤 추천 결과</div><h2>우리 모임에 잘 맞는 장소</h2></div><small id="hint"></small></div><div id="guide" class="scrollguide"><span></span><i class="arrow">↓</i></div><div id="list" class="list"></div></div></div></div></section></main>
 <script>
 const YK={lat:37.5125,lng:127.1027,name:'YK · 올림픽로 300'};
 const categories=['전체','고기','한식','중식','일식','양식','샤브샤브','치킨','이자카야','Bar','호프','포차'];
 
-// 현실적인 카테고리별 평균 단가 기준 정의
-const prices={고기:48000,한식:36000,중식:40000,일식:52000,양식:45000,샤브샤브:31000,치킨:25000,이자카야:39000,Bar:50000,호프:28000,포차:27000};
+let state={cat:'전체',room:false,parking:false},rows=[],data=[],map,companyMarker,markers=[],routeLine,infoWindow;
+const $=x=>document.getElementById(x);
 
-const bvals=[15000,30000,50000,70000,100000];
-let state={cat:'전체',budget:50000,room:false,parking:false},rows=[],data=[],map,companyMarker,markers=[],routeLine,infoWindow;
-const $=x=>document.getElementById(x),won=n=>new Intl.NumberFormat('ko-KR').format(n)+'원';
-
-// 위경도 직선거리 계산 (km)
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -53,7 +47,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// Worker 연동 함수
 async function getRealRestaurants(keyword){
     const response = await fetch(`https://yk-restaurant-api.gksthf0709.workers.dev/?q=${encodeURIComponent(keyword)}`);
     const result = await response.json();
@@ -85,59 +78,28 @@ function size(n){return n<=8?'일반 회식 · 8명 이하':n<=20?'중규모 회
 function ctl(){
     $('chips').innerHTML=categories.map(x=>`<button data-c="${x}" class="chip ${state.cat===x?'on':''}">${x}</button>`).join('');
     document.querySelectorAll('[data-c]').forEach(x=>x.onclick=()=>{state.cat=x.dataset.c;ctl()});
-    $('budgets').innerHTML=bvals.map(x=>`<button data-b="${x}" class="budget ${state.budget===x?'on':''}">${won(x)} ${x<100000?'이하':'이상'}</button>`).join('');
-    document.querySelectorAll('[data-b]').forEach(x=>x.onclick=()=>{state.budget=+x.dataset.b;ctl()});
     $('room').classList.toggle('on',state.room);
-    $('parking').classList.toggle('on',state.parking)
+    $('parking').classList.toggle('on',state.parking);
 }
 function people(){let n=+$('people').value||2;n=Math.max(2,Math.min(50,n));$('people').value=n;$('size').textContent=size(n);return n}
-function navSearch(n){return 'https://search.naver.com/search.naver?query='+encodeURIComponent(n+' 네이버 예약')}
+function navSearch(n){return 'https://search.naver.com/search.naver?query='+encodeURIComponent(n+' 네이버 메뉴')}
 function directions(r){return 'https://map.naver.com/p/directions/'+YK.lng+','+YK.lat+',YK/'+r.lng+','+r.lat+','+encodeURIComponent(r.name)+'/walk'}
 function clearMap(){markers.forEach(m=>m.setMap(null));markers=[];if(routeLine)routeLine.setMap(null);if(infoWindow)infoWindow.close()}
 
 function render(){
     const n=people(),rad=+$('radius').value,event=$('event').value,at=$('atmos').value;
-    $('total').textContent=won(n*state.budget);$('formula').textContent=`${n}명 × ${won(state.budget)}`;
     $('range').textContent=rad+'km';$('scale').textContent=size(n);
-    $('ametric').textContent=at;$('emetric').textContent=event;
     
-    // 소프트 필터링 및 지능형 점수 산정 (Soft Scoring & 0개 방지)
+    // 점수 산정 및 소프트 필터링 (가까운 거리, 룸/주차 매칭 우선)
     rows = data.filter(r => r.distance <= rad).map(r => {
-        let s = 40; // 기본 점수
-        
-        // 1. 거리 점수 (가까울수록 가점, 최대 20점)
-        s += Math.max(0, 20 - r.distance * 4);
-        
-        // 2. 예산 적합성 (예산 내에 들어오면 대가점, 초과하면 완만한 감점)
-        const diff = state.budget - r.price;
-        if (diff >= 0) {
-            s += 20;
-        } else {
-            const overRatio = Math.abs(diff) / state.budget;
-            s += Math.max(0, 20 - overRatio * 25);
-        }
-        
-        // 3. 룸/주차 필수 조건 스마트 가점/감점 (하드하게 날리지 않고 소프트하게 유도)
-        if (state.room) {
-            s += r.room ? 25 : -20;
-        }
-        if (state.parking) {
-            s += r.parking ? 20 : -15;
-        }
-        
-        // 4. 모임 성격 및 분위기 매칭
+        let s = 50;
+        s += Math.max(0, 30 - r.distance * 6); // 가까울수록 고득점
+        if (state.room) s += r.room ? 25 : -25;
+        if (state.parking) s += r.parking ? 20 : -20;
         if (r.events.includes(event)) s += 10;
-        if (r.atmospheres.includes(at)) s += 10;
-        
-        return {
-            ...r,
-            score: Math.max(1, Math.min(99, Math.round(s))),
-            total: r.price * n,
-            balance: (state.budget - r.price) * n
-        };
+        return { ...r, score: Math.max(1, Math.min(99, Math.round(s))) };
     }).sort((a,b)=>b.score-a.score).slice(0,10);
     
-    // 만약 반경 안에 검색 결과가 너무 없으면 반경 제한을 풀고 상위 10개 표시 (0개 방지 장치)
     if(rows.length === 0 && data.length > 0) {
         rows = [...data].sort((a,b)=>b.score-a.score).slice(0,5);
     }
@@ -146,7 +108,24 @@ function render(){
     $('hint').textContent=`${state.cat==='전체'?'전체':state.cat} 후보 ${rows.length}개`;
     $('guide').querySelector('span').textContent=rows.length>3?`후보 ${rows.length}개 · 목록 안에서 아래로 스크롤해 모두 확인하세요.`:`후보 ${rows.length}개가 표시되었습니다.`;
     
-    $('list').innerHTML=rows.length?rows.map((r,i)=>`<article class="item" data-i="${i}"><div class="rank">${i+1}</div><div><div class="name"><h3>${r.name}</h3><span class="cat">${r.category}</span></div><div class="meta"><span>📍 ${r.distance}km</span><span>⭐ ${r.rating}</span><span>👥 추천 ${r.capacity}인석</span></div><div class="tags">${r.tags.map(t=>`<span class="tag">✓ ${t}</span>`).join('')}</div><div class="why"><b>${at}</b> 분위기, ${event} 목적, 예산 및 편의시설을 분석했습니다.</div><div class="actions"><a onclick="event.stopPropagation()" target="_blank" href="${navSearch(r.name)}">네이버 보기</a><a onclick="event.stopPropagation()" target="_blank" href="${directions(r)}">도보 길찾기</a></div></div><div class="cost"><small>모임 적합도</small><div class="score">${r.score}점</div><small>예상 1인 비용</small><strong>${won(r.price)}</strong><small>총 ${won(r.total)}</small><div class="status ${r.balance>=0?'ok':'over'}">${r.balance>=0?'예산 여유 ':'예산 초과 '}${won(Math.abs(r.balance))}</div></div></article>`).join(''):`<div class="empty">조건에 맞는 후보가 없습니다. 반경이나 조건을 넓혀보세요.</div>`;
+    $('list').innerHTML=rows.length?rows.map((r,i)=>`
+        <article class="item" data-i="${i}">
+            <div class="rank">${i+1}</div>
+            <div>
+                <div class="name"><h3>${r.name}</h3><span class="cat">${r.category}</span></div>
+                <div class="meta"><span>📍 ${r.distance}km</span><span>👥 추천인원 ${n}명</span></div>
+                <div class="tags">${r.tags.map(t=>`<span class="tag">✓ ${t}</span>`).join('')}</div>
+                <div class="why"><b>${r.address}</b></div>
+                <div class="actions">
+                    <a onclick="event.stopPropagation()" target="_blank" href="${directions(r)}">도보 길찾기</a>
+                </div>
+            </div>
+            <div class="pricebox">
+                <small>실제 메뉴 및 가격</small>
+                <strong>네이버에서 확인</strong>
+                <a onclick="event.stopPropagation()" target="_blank" href="${navSearch(r.name)}">📋 메뉴판 보기</a>
+            </div>
+        </article>`).join(''):`<div class="empty">조건에 맞는 후보가 없습니다. 반경이나 조건을 넓혀보세요.</div>`;
     
     clearMap();
     const bounds=new naver.maps.LatLngBounds(new naver.maps.LatLng(YK.lat,YK.lng),new naver.maps.LatLng(YK.lat,YK.lng));
@@ -178,24 +157,20 @@ $('radius').oninput=()=>$('rtext').textContent=$('radius').value;
 $('room').onclick=()=>{state.room=!state.room;ctl()};
 $('parking').onclick=()=>{state.parking=!state.parking;ctl()};
 
-// --- 스마트 검색 버튼 클릭 이벤트 (고도화 버전) ---
 $('go').onclick = async () => {
     const btn = $('go');
     const originalText = btn.textContent;
-    btn.textContent = "맞춤 맛집 분석 중... ⏳";
+    btn.textContent = "맞춤 맛집 검색 중... ⏳";
     btn.style.opacity = '0.7';
 
     try {
-        // 1. 검색어 질 향상: 카테고리와 모임 성격을 조합하여 정확한 키워드 생성
         const catQuery = state.cat === '전체' ? '맛집' : state.cat;
         const searchKeyword = `잠실 ${catQuery} ${$('event').value}`.replace(/\s+/g, ' ').trim();
-        
         const items = await getRealRestaurants(searchKeyword);
         
         if (items && items.length > 0) {
             const reqPeople = people();
             
-            // 2. 네이버 API 데이터 정밀 가공 및 스마트 키워드 텍스트 분석
             data = items.map((item) => {
                 const lng = parseInt(item.mapx) / 10000000;
                 const lat = parseInt(item.mapy) / 10000000;
@@ -204,36 +179,23 @@ $('go').onclick = async () => {
                 const catParts = item.category ? item.category.split('>') : ['기타'];
                 const categoryName = catParts[catParts.length - 1];
                 
-                // 텍스트 분석을 통한 룸/주차 유무 판정 (상세설명, 제목, 카테고리 종합 분석)
                 const fullText = (cleanName + " " + item.category + " " + (item.description || "") + " " + item.roadAddress).toLowerCase();
                 const hasRoom = fullText.includes('룸') || fullText.includes('개별') || fullText.includes('단체석') || fullText.includes('프라이빗') || fullText.includes('좌식');
                 const hasParking = fullText.includes('주차') || fullText.includes('발렛') || fullText.includes('파킹');
                 
-                // YK 위치와의 실제 거리 (km)
                 const dist = calculateDistance(YK.lat, YK.lng, lat, lng).toFixed(1);
                 
-                // 카테고리별 현실적 평균 단가 매칭
-                const basePrice = prices[categoryName] || prices[Object.keys(prices).find(k => categoryName.includes(k))] || 40000;
-                const priceVariation = (cleanName.length % 5 - 2) * 3000;
-                const calculatedPrice = basePrice + priceVariation;
-
-                // 태그 동적 생성
                 const tags = [];
                 if (hasRoom) tags.push('프라이빗룸');
                 if (hasParking) tags.push('주차 가능');
-                tags.push($('atmos').value);
+                tags.push(categoryName);
 
                 return {
                     name: cleanName,
                     category: categoryName,
                     distance: +dist,
-                    price: calculatedPrice,
-                    capacity: reqPeople + 8,
-                    atmospheres: [$ ('atmos').value, '적당히 시끄러움'],
-                    events: [$ ('event').value, '회식'],
                     room: hasRoom,
                     parking: hasParking,
-                    rating: (4.1 + (cleanName.length % 8) * 0.1).toFixed(1),
                     tags: tags,
                     lat: lat,
                     lng: lng,
