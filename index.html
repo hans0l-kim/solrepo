@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>YK Team Dinner Planner v5.0</title>
+<title>YK Team Dinner Planner v5.1</title>
 <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qpwpk81lu0"></script>
 <style>
 :root{--y:#ffd43b;--ink:#28261b;--muted:#746e58;--line:#e4d8a5;--green:#147154;--red:#c7463b;--shadow:0 14px 38px #44360018}
@@ -21,7 +21,7 @@
 <header class="top"><div class="topin"><div class="brand"><div class="logo">🍽️</div><div><h1>YK Team Dinner Planner</h1><p>우리 모임에 맞는 장소를 30초 만에</p></div></div><div class="loc">📍 서울시 송파구 올림픽로 300 기준</div></div></header>
 <main class="app"><aside class="panel"><h2>모임 조건 설정</h2><p class="hint">참석 인원, 모임 성격, 룸 및 주차 조건을 반영해 최적의 장소를 추천합니다.</p>
 <div class="sec"><label class="label">👥 참석 인원</label><div class="people"><input id="people" class="input" type="number" min="2" max="50" value="12"><div class="unit">명</div></div><div id="size" class="size"></div></div>
-<div class="sec"><label class="label">🎯 모임 성격</label><select id="event" class="select"><option>팀 점심</option><option>팀 저녁</option><option selected>회식</option><option>거래처 미팅</option><option>동기 모임</option><option>환영회</option><option>송별회</option><option>프로젝트 회식</option><option>송년회</option><option>임원 동행</option></select></div>
+<div class="sec"><label class="label">🎯 모임 성격</label><select id="event" class="select"><option>팀 점심</option><option selected>회식</option><option>거래처 미팅</option><option>동기 모임</option><option>환영회/송별회</option></select></div>
 <div class="sec"><label class="label">🔊 원하는 분위기</label><select id="atmos" class="select"><option>조용함</option><option selected>적당히 시끄러움</option><option>왁자지껄</option></select></div>
 <div class="sec"><label class="label">🍜 음식 및 주류 카테고리</label><div id="chips" class="chips"></div></div>
 <div class="sec"><div class="rangeTop"><span>📍 검색 반경</span><span><b id="rtext">3</b>km</span></div><input id="radius" class="range" type="range" min="1" max="5" value="3"></div>
@@ -92,37 +92,16 @@ function render(){
     $('range').textContent=rad+'km';
     $('scale').textContent=size(n);
     
-    // 엄격한 조건 필터링 (반경, 카테고리 철저 분리, 룸/주차 필수 조건 하드 필터)
+    // 정확한 반경 및 룸/주차 조건 필터링
     rows = data.filter(r => {
-        // 1. 반경 필터 (설정한 거리 이내만 통과)
         if (r.distance > rad) return false;
-
-        // 2. 카테고리 엄격 분리 필터 (고기와 한식 등이 서로 섞이지 않도록 정밀 매칭)
-        if (state.cat !== '전체') {
-            const catStr = (r.category + " " + r.name).toLowerCase();
-            const targetCat = state.cat.toLowerCase();
-            if (targetCat === '고기') {
-                if (!catStr.includes('고기') && !catStr.includes('육류') && !catStr.includes('삼겹살') && !catStr.includes('구이') && !catStr.includes('한우') && !catStr.includes('갈비')) return false;
-            } else if (targetCat === '한식') {
-                // 한식일 때는 고기 전문점이나 이자카야 등이 섞이지 않도록 제외 처리
-                if (catStr.includes('고기') || catStr.includes('육류') || catStr.includes('이자카야') || catStr.includes('양식') || catStr.includes('중식') || catStr.includes('일식')) return false;
-            } else {
-                if (!catStr.includes(targetCat)) return false;
-            }
-        }
-
-        // 3. 룸 필수 토글 엄격 필터
         if (state.room && !r.room) return false;
-
-        // 4. 주차 필수 토글 엄격 필터
         if (state.parking && !r.parking) return false;
-
         return true;
     }).map(r => {
-        // 가까울수록 높은 점수 부여
         let s = 100 - (r.distance * 15);
         return { ...r, score: Math.max(1, Math.min(99, Math.round(s))) };
-    }).sort((a,b)=>b.distance - a.distance === 0 ? b.score - a.score : a.distance - b.distance).slice(0,10);
+    }).sort((a,b)=> a.distance - b.distance).slice(0,10);
 
     $('count').textContent=rows.length+'곳';
     $('hint').textContent=`${state.cat==='전체'?'전체':state.cat} 후보 ${rows.length}개`;
@@ -169,7 +148,6 @@ function select(i){
 
 $('people').oninput=people;
 
-// 반경 슬라이더 실시간 연동 (슬라이더 움직일 때마다 즉시 필터링 적용)
 $('radius').oninput=()=>{
     $('rtext').textContent=$('radius').value;
     if(data.length > 0) render();
@@ -178,16 +156,17 @@ $('radius').oninput=()=>{
 $('room').onclick=()=>{state.room=!state.room;ctl();if(data.length>0)render();};
 $('parking').onclick=()=>{state.parking=!state.parking;ctl();if(data.length>0)render();};
 
-// --- 순수 검색 쿼리 고도화 (모임성격/분위기는 검색창에 넣지 않고 오직 위치+카테고리만 질의) ---
+// --- 맞춤 장소 추천 버튼 이벤트 (로딩 상태 철저 제어 및 정확한 검색어 조합) ---
 $('go').onclick = async () => {
     const btn = $('go');
-    const originalText = btn.textContent;
     btn.textContent = "맞춤 맛집 검색 중... ⏳";
     btn.style.opacity = '0.7';
 
     try {
-        // 네이버 API에는 '잠실 [카테고리] 맛집' 형태의 순수 키워드만 전달
-        const searchKeyword = `잠실 ${state.cat === '전체' ? '회식' : state.cat} 맛집`;
+        // 카테고리별 맞춤 검색어 구성 (치킨, 포차, 이자카야 등 모든 카테고리 정상 작동 보장)
+        const targetCategory = state.cat === '전체' ? '회식' : state.cat;
+        const searchKeyword = `잠실 ${targetCategory} 맛집`;
+        
         const items = await getRealRestaurants(searchKeyword);
         
         if (items && items.length > 0) {
@@ -203,7 +182,8 @@ $('go').onclick = async () => {
                 const hasRoom = fullText.includes('룸') || fullText.includes('개별') || fullText.includes('단체석') || fullText.includes('프라이빗') || fullText.includes('좌식');
                 const hasParking = fullText.includes('주차') || fullText.includes('발렛') || fullText.includes('파킹');
                 
-                const dist = calculateDistance(YK.lat, YK.lng, lat, lng).toFixed(1);
+                // YK 기준점과의 정확한 직선 거리 계산 (숫자형)
+                const dist = parseFloat(calculateDistance(YK.lat, YK.lng, lat, lng).toFixed(1));
                 
                 const tags = [];
                 if (hasRoom) tags.push('프라이빗룸');
@@ -213,7 +193,7 @@ $('go').onclick = async () => {
                 return {
                     name: cleanName,
                     category: categoryName,
-                    distance: +dist,
+                    distance: dist,
                     room: hasRoom,
                     parking: hasParking,
                     tags: tags,
@@ -231,7 +211,8 @@ $('go').onclick = async () => {
     } catch(error) {
         console.error("데이터 처리 중 에러 발생:", error);
     } finally {
-        btn.textContent = originalText;
+        // 검색 완료 및 에러 발생 시 무조건 버튼 텍스트 원복
+        btn.textContent = "🔍 맞춤 장소 추천";
         btn.style.opacity = '1';
     }
 };
