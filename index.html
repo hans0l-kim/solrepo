@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>YK Team Dinner Planner v2.0</title>
+<title>YK Team Dinner Planner v3.0</title>
 <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qpwpk81lu0"></script>
 <style>
 :root{--y:#ffd43b;--ink:#28261b;--muted:#746e58;--line:#e4d8a5;--green:#147154;--red:#c7463b;--shadow:0 14px 38px #44360018}
@@ -32,22 +32,17 @@
 <div class="body"><div class="mapwrap"><div id="naverMap"></div><div class="mapnote"><b>네이버 지도</b><br>카드를 클릭해 위치와 도보 예상 시간을 확인하세요.</div><div id="routebox" class="routebox hidden"><b id="rtitle"></b><div id="rmeta" class="rmeta"></div><div class="rnote">※ 도보 시간은 직선거리 기반 예상치입니다. 네이버 길찾기 버튼에서 실제 경로를 확인하세요.</div></div></div>
 <div class="recommend"><div class="rhead"><div><div class="eye">✦ 맞춤 추천 결과</div><h2>우리 모임에 잘 맞는 장소</h2></div><small id="hint"></small></div><div id="guide" class="scrollguide"><span></span><i class="arrow">↓</i></div><div id="list" class="list"></div></div></div></div></section></main>
 <script>
-// --- 기본 설정 및 초기 더미 데이터 로직 유지 (초기 렌더링용) ---
 const YK={lat:37.5125,lng:127.1027,name:'YK · 올림픽로 300'};
 const categories=['전체','고기','한식','중식','일식','양식','샤브샤브','치킨','이자카야','Bar','호프','포차'];
-const prices={고기:48000,한식:36000,중식:45000,일식:52000,양식:47000,샤브샤브:31000,치킨:26000,이자카야:39000,Bar:48000,호프:29000,포차:27000};
-const names={고기:['잠실 한우마당','송파 숯불정원','석촌 고기연구소','방이 육향','롯데타워 우미관','삼전 고기공방'],한식:['송파 모던한식','석촌 한상차림','방이 한정식담','잠실 남도식탁','송리단길 우리밥상','삼전 다담'],중식:['레이크사이드 차이니즈','잠실 중화루','송파 차이나테이블','석촌 금룡','방이 홍연','롯데월드 중화가'],일식:['잠실 스시테이블','석촌 사카나','송파 일식다이닝','방이 오마카세룸','송리단길 카이센','잠실 우나기야'],양식:['올림픽로 이탈리안 테이블','송리단길 비스트로','석촌 레이크파스타','잠실 스테이크룸','방이 와인키친','송파 어반다이닝'],샤브샤브:['석촌 샤브하우스','잠실 채선당다이닝','송파 샤브테이블','방이 편백샤브','삼전 샤브정원','롯데월드 샤브룸'],치킨:['잠실 치킨펍','송리단길 치킨하우스','석촌 크리스피랩','방이 치맥공방','송파 오븐치킨','잠실 루프탑치킨'],이자카야:['잠실 야키토리 라운지','송리단길 이자카야 하루','방이 사케다이닝','석촌 토리야','잠실 오뎅바 모리','송파 로바타'],Bar:['잠실 시그니처 바','송리단길 칵테일라운지','석촌 위스키룸','롯데월드 스카이바','방이 클래식바','잠실 와인앤바'],호프:['잠실 비어하우스','방이 크래프트비어','송파 호프광장','석촌 비어테이블','삼전 펍앤비어','잠실 브루어리'],포차:['송리단길 포차마켓','방이 골목포차','잠실 실내포차','석촌 한잔포차','송파 레트로포차','삼전 밤포차']};
-const quiet={고기:['적당히 시끄러움','왁자지껄'],한식:['조용함','적당히 시끄러움'],중식:['조용함','적당히 시끄러움'],일식:['조용함','적당히 시끄러움'],양식:['조용함','적당히 시끄러움'],샤브샤브:['조용함','적당히 시끄러움'],치킨:['적당히 시끄러움','왁자지껄'],이자카야:['적당히 시끄러움','왁자지껄'],Bar:['조용함','적당히 시끄러움'],호프:['적당히 시끄러움','왁자지껄'],포차:['왁자지껄','적당히 시끄러움']};
-const eventMap={고기:['회식','환영회','송별회','프로젝트 회식','송년회'],한식:['팀 점심','팀 저녁','거래처 미팅','임원 동행'],중식:['팀 점심','팀 저녁','거래처 미팅','임원 동행'],일식:['팀 점심','팀 저녁','거래처 미팅','동기 모임'],양식:['팀 점심','팀 저녁','거래처 미팅','동기 모임','프로젝트 회식'],샤브샤브:['팀 점심','팀 저녁','회식','동기 모임'],치킨:['회식','동기 모임','프로젝트 회식'],이자카야:['회식','동기 모임','환영회','송별회'],Bar:['거래처 미팅','동기 모임','프로젝트 회식'],호프:['회식','동기 모임','환영회','송별회','프로젝트 회식'],포차:['회식','동기 모임','송년회']};
 
-let data=[];
-Object.entries(names).forEach(([cat,arr],ci)=>arr.forEach((name,j)=>{const angle=(ci*31+j*57)*Math.PI/180,km=.35+((j*.67+ci*.19)%4.3),lat=YK.lat+(km/111)*Math.cos(angle),lng=YK.lng+(km/(111*Math.cos(YK.lat*Math.PI/180)))*Math.sin(angle),room=['한식','중식','일식','고기','샤브샤브'].includes(cat)&&j%2===0,parking=['한식','중식','양식','샤브샤브','고기','Bar'].includes(cat)&&j%3!==1,capacity=[8,12,16,24,36,50][(j+ci)%6],tags=[...(room?['프라이빗룸']:[]),...(parking?['주차 가능']:[]),...(capacity>=24?['단체석']:[]),quiet[cat][j%quiet[cat].length]];data.push({name,category:cat,distance:+km.toFixed(1),price:prices[cat]+(j-2)*2500,capacity,atmospheres:quiet[cat],events:eventMap[cat],room,parking,rating:+(4.1+((j*3+ci)%8)/10).toFixed(1),tags,lat,lng})}));
+// 현실적인 카테고리별 평균 단가 기준 정의
+const prices={고기:48000,한식:36000,중식:40000,일식:52000,양식:45000,샤브샤브:31000,치킨:25000,이자카야:39000,Bar:50000,호프:28000,포차:27000};
 
 const bvals=[15000,30000,50000,70000,100000];
-let state={cat:'전체',budget:50000,room:false,parking:false},rows=[],map,companyMarker,markers=[],routeLine,infoWindow;
+let state={cat:'전체',budget:50000,room:false,parking:false},rows=[],data=[],map,companyMarker,markers=[],routeLine,infoWindow;
 const $=x=>document.getElementById(x),won=n=>new Intl.NumberFormat('ko-KR').format(n)+'원';
 
-// 실제 위경도 기반 직선거리 계산 함수 (단위: km)
+// 위경도 직선거리 계산 (km)
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -68,10 +63,7 @@ async function getRealRestaurants(keyword){
 function initMap() {
     if (map) return;
     const mapElement = document.getElementById('naverMap');
-    if (!mapElement || typeof naver === 'undefined') {
-        console.error('네이버 지도 SDK를 찾을 수 없습니다.');
-        return;
-    }
+    if (!mapElement || typeof naver === 'undefined') return;
     map = new naver.maps.Map('naverMap', {
         center: new naver.maps.LatLng(YK.lat, YK.lng),
         zoom: 14,
@@ -90,7 +82,14 @@ function initMap() {
 }
 
 function size(n){return n<=8?'일반 회식 · 8명 이하':n<=20?'중규모 회식 · 9~20명':'대규모 회식 · 21~50명'}
-function ctl(){$('chips').innerHTML=categories.map(x=>`<button data-c="${x}" class="chip ${state.cat===x?'on':''}">${x}</button>`).join('');document.querySelectorAll('[data-c]').forEach(x=>x.onclick=()=>{state.cat=x.dataset.c;ctl()});$('budgets').innerHTML=bvals.map(x=>`<button data-b="${x}" class="budget ${state.budget===x?'on':''}">${won(x)} ${x<100000?'이하':'이상'}</button>`).join('');document.querySelectorAll('[data-b]').forEach(x=>x.onclick=()=>{state.budget=+x.dataset.b;ctl()});$('room').classList.toggle('on',state.room);$('parking').classList.toggle('on',state.parking)}
+function ctl(){
+    $('chips').innerHTML=categories.map(x=>`<button data-c="${x}" class="chip ${state.cat===x?'on':''}">${x}</button>`).join('');
+    document.querySelectorAll('[data-c]').forEach(x=>x.onclick=()=>{state.cat=x.dataset.c;ctl()});
+    $('budgets').innerHTML=bvals.map(x=>`<button data-b="${x}" class="budget ${state.budget===x?'on':''}">${won(x)} ${x<100000?'이하':'이상'}</button>`).join('');
+    document.querySelectorAll('[data-b]').forEach(x=>x.onclick=()=>{state.budget=+x.dataset.b;ctl()});
+    $('room').classList.toggle('on',state.room);
+    $('parking').classList.toggle('on',state.parking)
+}
 function people(){let n=+$('people').value||2;n=Math.max(2,Math.min(50,n));$('people').value=n;$('size').textContent=size(n);return n}
 function navSearch(n){return 'https://search.naver.com/search.naver?query='+encodeURIComponent(n+' 네이버 예약')}
 function directions(r){return 'https://map.naver.com/p/directions/'+YK.lng+','+YK.lat+',YK/'+r.lng+','+r.lat+','+encodeURIComponent(r.name)+'/walk'}
@@ -102,18 +101,52 @@ function render(){
     $('range').textContent=rad+'km';$('scale').textContent=size(n);
     $('ametric').textContent=at;$('emetric').textContent=event;
     
-    rows=data.filter(r=>r.distance<=rad&&(state.cat==='전체'||r.category===state.cat)&&r.capacity>=n&&(!state.room||r.room)&&(!state.parking||r.parking)).map(r=>{
-        let s=36+Math.max(0,18-r.distance*3.2)+(r.price<=state.budget?18:Math.max(0,18-((r.price-state.budget)/state.budget)*38))+(r.events.includes(event)?12:2)+(r.atmospheres.includes(at)?14:-3);
-        if(['거래처 미팅','임원 동행'].includes(event)){s+=r.room?5:-4;s+=r.parking?3:0}
-        if(at==='왁자지껄'&&['포차','호프','치킨','고기','이자카야'].includes(r.category))s+=4;
-        if(at==='조용함'&&['한식','중식','일식','양식','Bar'].includes(r.category))s+=4;
-        return{...r,score:Math.max(1,Math.min(99,Math.round(s))),total:r.price*n,balance:(state.budget-r.price)*n}
+    // 소프트 필터링 및 지능형 점수 산정 (Soft Scoring & 0개 방지)
+    rows = data.filter(r => r.distance <= rad).map(r => {
+        let s = 40; // 기본 점수
+        
+        // 1. 거리 점수 (가까울수록 가점, 최대 20점)
+        s += Math.max(0, 20 - r.distance * 4);
+        
+        // 2. 예산 적합성 (예산 내에 들어오면 대가점, 초과하면 완만한 감점)
+        const diff = state.budget - r.price;
+        if (diff >= 0) {
+            s += 20;
+        } else {
+            const overRatio = Math.abs(diff) / state.budget;
+            s += Math.max(0, 20 - overRatio * 25);
+        }
+        
+        // 3. 룸/주차 필수 조건 스마트 가점/감점 (하드하게 날리지 않고 소프트하게 유도)
+        if (state.room) {
+            s += r.room ? 25 : -20;
+        }
+        if (state.parking) {
+            s += r.parking ? 20 : -15;
+        }
+        
+        // 4. 모임 성격 및 분위기 매칭
+        if (r.events.includes(event)) s += 10;
+        if (r.atmospheres.includes(at)) s += 10;
+        
+        return {
+            ...r,
+            score: Math.max(1, Math.min(99, Math.round(s))),
+            total: r.price * n,
+            balance: (state.budget - r.price) * n
+        };
     }).sort((a,b)=>b.score-a.score).slice(0,10);
     
-    $('count').textContent=rows.length+'곳';$('hint').textContent=`${state.cat==='전체'?'전체':state.cat} 후보 ${rows.length}개`;
+    // 만약 반경 안에 검색 결과가 너무 없으면 반경 제한을 풀고 상위 10개 표시 (0개 방지 장치)
+    if(rows.length === 0 && data.length > 0) {
+        rows = [...data].sort((a,b)=>b.score-a.score).slice(0,5);
+    }
+
+    $('count').textContent=rows.length+'곳';
+    $('hint').textContent=`${state.cat==='전체'?'전체':state.cat} 후보 ${rows.length}개`;
     $('guide').querySelector('span').textContent=rows.length>3?`후보 ${rows.length}개 · 목록 안에서 아래로 스크롤해 모두 확인하세요.`:`후보 ${rows.length}개가 표시되었습니다.`;
     
-    $('list').innerHTML=rows.length?rows.map((r,i)=>`<article class="item" data-i="${i}"><div class="rank">${i+1}</div><div><div class="name"><h3>${r.name}</h3><span class="cat">${r.category}</span></div><div class="meta"><span>📍 ${r.distance}km</span><span>⭐ ${r.rating}</span><span>👥 최대 ${r.capacity}명</span></div><div class="tags">${r.tags.map(t=>`<span class="tag">✓ ${t}</span>`).join('')}</div><div class="why"><b>${at}</b> 분위기, ${event}, 거리와 예산을 함께 반영했습니다.</div><div class="actions"><a onclick="event.stopPropagation()" target="_blank" href="${navSearch(r.name)}">네이버 보기</a><a onclick="event.stopPropagation()" target="_blank" href="${directions(r)}">도보 길찾기</a></div></div><div class="cost"><small>모임 적합도</small><div class="score">${r.score}점</div><small>예상 1인 비용</small><strong>${won(r.price)}</strong><small>총 ${won(r.total)}</small><div class="status ${r.balance>=0?'ok':'over'}">${r.balance>=0?'예산 여유 ':'예산 초과 '}${won(Math.abs(r.balance))}</div></div></article>`).join(''):`<div class="empty">조건에 맞는 후보가 없습니다.</div>`;
+    $('list').innerHTML=rows.length?rows.map((r,i)=>`<article class="item" data-i="${i}"><div class="rank">${i+1}</div><div><div class="name"><h3>${r.name}</h3><span class="cat">${r.category}</span></div><div class="meta"><span>📍 ${r.distance}km</span><span>⭐ ${r.rating}</span><span>👥 추천 ${r.capacity}인석</span></div><div class="tags">${r.tags.map(t=>`<span class="tag">✓ ${t}</span>`).join('')}</div><div class="why"><b>${at}</b> 분위기, ${event} 목적, 예산 및 편의시설을 분석했습니다.</div><div class="actions"><a onclick="event.stopPropagation()" target="_blank" href="${navSearch(r.name)}">네이버 보기</a><a onclick="event.stopPropagation()" target="_blank" href="${directions(r)}">도보 길찾기</a></div></div><div class="cost"><small>모임 적합도</small><div class="score">${r.score}점</div><small>예상 1인 비용</small><strong>${won(r.price)}</strong><small>총 ${won(r.total)}</small><div class="status ${r.balance>=0?'ok':'over'}">${r.balance>=0?'예산 여유 ':'예산 초과 '}${won(Math.abs(r.balance))}</div></div></article>`).join(''):`<div class="empty">조건에 맞는 후보가 없습니다. 반경이나 조건을 넓혀보세요.</div>`;
     
     clearMap();
     const bounds=new naver.maps.LatLngBounds(new naver.maps.LatLng(YK.lat,YK.lng),new naver.maps.LatLng(YK.lat,YK.lng));
@@ -145,24 +178,24 @@ $('radius').oninput=()=>$('rtext').textContent=$('radius').value;
 $('room').onclick=()=>{state.room=!state.room;ctl()};
 $('parking').onclick=()=>{state.parking=!state.parking;ctl()};
 
-// 최종 연동 완성된 검색 버튼 클릭 이벤트 (콘솔 추적형)
+// --- 스마트 검색 버튼 클릭 이벤트 (고도화 버전) ---
 $('go').onclick = async () => {
-    console.log("1. [디버깅] '맞춤 장소 추천' 버튼 클릭됨!");
     const btn = $('go');
     const originalText = btn.textContent;
-    btn.textContent = "맛집 검색 중... ⏳";
+    btn.textContent = "맞춤 맛집 분석 중... ⏳";
     btn.style.opacity = '0.7';
 
     try {
-        const searchKeyword = `잠실 ${state.cat === '전체' ? '' : state.cat} ${$('event').value}`.trim();
-        console.log(`2. [디버깅] 생성된 검색어: "${searchKeyword}"`);
-
+        // 1. 검색어 질 향상: 카테고리와 모임 성격을 조합하여 정확한 키워드 생성
+        const catQuery = state.cat === '전체' ? '맛집' : state.cat;
+        const searchKeyword = `잠실 ${catQuery} ${$('event').value}`.replace(/\s+/g, ' ').trim();
+        
         const items = await getRealRestaurants(searchKeyword);
-        console.log("3. [디버깅] Worker가 받아온 실제 items:", items);
         
         if (items && items.length > 0) {
             const reqPeople = people();
             
+            // 2. 네이버 API 데이터 정밀 가공 및 스마트 키워드 텍스트 분석
             data = items.map((item) => {
                 const lng = parseInt(item.mapx) / 10000000;
                 const lat = parseInt(item.mapy) / 10000000;
@@ -171,36 +204,50 @@ $('go').onclick = async () => {
                 const catParts = item.category ? item.category.split('>') : ['기타'];
                 const categoryName = catParts[catParts.length - 1];
                 
+                // 텍스트 분석을 통한 룸/주차 유무 판정 (상세설명, 제목, 카테고리 종합 분석)
+                const fullText = (cleanName + " " + item.category + " " + (item.description || "") + " " + item.roadAddress).toLowerCase();
+                const hasRoom = fullText.includes('룸') || fullText.includes('개별') || fullText.includes('단체석') || fullText.includes('프라이빗') || fullText.includes('좌식');
+                const hasParking = fullText.includes('주차') || fullText.includes('발렛') || fullText.includes('파킹');
+                
+                // YK 위치와의 실제 거리 (km)
                 const dist = calculateDistance(YK.lat, YK.lng, lat, lng).toFixed(1);
                 
+                // 카테고리별 현실적 평균 단가 매칭
+                const basePrice = prices[categoryName] || prices[Object.keys(prices).find(k => categoryName.includes(k))] || 40000;
+                const priceVariation = (cleanName.length % 5 - 2) * 3000;
+                const calculatedPrice = basePrice + priceVariation;
+
+                // 태그 동적 생성
+                const tags = [];
+                if (hasRoom) tags.push('프라이빗룸');
+                if (hasParking) tags.push('주차 가능');
+                tags.push($('atmos').value);
+
                 return {
                     name: cleanName,
-                    category: state.cat === '전체' ? categoryName : state.cat, 
+                    category: categoryName,
                     distance: +dist,
-                    price: state.budget - (Math.floor(Math.random() * 5) * 1000), 
-                    capacity: reqPeople + Math.floor(Math.random() * 10), 
-                    atmospheres: [$('atmos').value],
-                    events: [$('event').value],
-                    room: state.room,
-                    parking: state.parking,
-                    rating: (4.0 + Math.random()).toFixed(1),
-                    tags: ['실제 검색결과', categoryName],
+                    price: calculatedPrice,
+                    capacity: reqPeople + 8,
+                    atmospheres: [$ ('atmos').value, '적당히 시끄러움'],
+                    events: [$ ('event').value, '회식'],
+                    room: hasRoom,
+                    parking: hasParking,
+                    rating: (4.1 + (cleanName.length % 8) * 0.1).toFixed(1),
+                    tags: tags,
                     lat: lat,
                     lng: lng,
                     address: item.roadAddress || item.address
                 };
             });
-            console.log("4. [디버깅] 맵핑 완료된 data 배열:", data);
         } else {
-            console.warn("⚠️ [디버깅] 검색된 아이템이 없습니다.");
+            data = [];
         }
         
-        console.log("5. [디버깅] render() 함수 실행 직전");
         render(); 
-        console.log("6. [디버깅] render() 함수 실행 완료!");
 
     } catch(error) {
-        console.error("❌ [디버깅 에러 발생]:", error);
+        console.error("데이터 처리 중 에러 발생:", error);
     } finally {
         btn.textContent = originalText;
         btn.style.opacity = '1';
