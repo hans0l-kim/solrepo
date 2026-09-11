@@ -126,7 +126,7 @@ function render(){
 
     $('count').textContent=rows.length+'곳';
     $('hint').textContent=`${state.cat==='전체'?'전체':state.cat} 후보 ${rows.length}개`;
-    $('guide').querySelector('span').textContent=rows.length>0?`조건에 맞는 식당 ${rows.length개가 검색되었습니다.`:`조건에 맞는 식당이 없습니다. 반경이나 조건을 넓혀보세요.`;
+    $('guide').querySelector('span').textContent=rows.length>0?`조건에 맞는 식당 ${rows.length}개가 검색되었습니다.`:`조건에 맞는 식당이 없습니다. 반경이나 조건을 넓혀보세요.`;
     
     $('list').innerHTML=rows.length?rows.map((r,i)=>`
         <article class="item" data-i="${i}">
