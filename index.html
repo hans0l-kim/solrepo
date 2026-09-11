@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>YK Team Dinner Planner v7.2</title>
+<title>YK Team Dinner Planner v7.4</title>
 <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qpwpk81lu0"></script>
 <style>
 :root{--y:#ffd43b;--ink:#28261b;--muted:#746e58;--line:#e4d8a5;--green:#147154;--red:#c7463b;--shadow:0 14px 38px #44360018}
@@ -143,23 +143,29 @@ function render(){
         const maxDist = (event === '캐주얼 점심') ? Math.min(rad, 1.2) : rad;
         if (r.distance > maxDist) return false;
         if (!matchesCategory(r.category, r.name, state.cat)) return false;
-        if (state.room && !r.room) return false;
-        if (state.parking && !r.parking) return false;
+
+        // [핵심 수정] 사용자가 직접 룸/주차 토글을 켰을 때는 검색어 자체로 이미 걸러져서 들어오므로, 
+        // 텍스트에 단어가 없다는 이유로 강제 탈락(Hard Filter)시키지 않고 부드럽게 통과시킵니다.
+        // (단, 토글이 꺼져있을 때만 엄격하게 검사)
+        if (state.room && !state.roomSearched && !r.room) return false;
+        if (state.parking && !state.parkingSearched && !r.parking) return false;
 
         return true;
     }).map(r => {
         let s = 100 - (r.distance * 12);
-        if (event === '거래처 미팅' && (r.fullText.includes('미팅') || r.room)) s += 30;
-        if (event === '회식' && r.capacity >= n) s += 20;
-        if (event === '친구 모임' && ['이자카야', 'Bar', '양식', '호프'].includes(r.category)) s += 25;
-        if (event === '소개팅' && (r.fullText.includes('분위기') || r.category === '양식' || r.category === 'Bar')) s += 30;
+        if (!state.room && !state.parking) {
+            if (event === '거래처 미팅' && (r.fullText.includes('미팅') || r.room)) s += 30;
+            if (event === '회식' && r.capacity >= n) s += 20;
+            if (event === '친구 모임' && ['이자카야', 'Bar', '양식', '호프'].includes(r.category)) s += 25;
+            if (event === '소개팅' && (r.fullText.includes('분위기') || r.category === '양식' || r.category === 'Bar')) s += 30;
+        }
 
         return { ...r, score: Math.max(1, Math.min(99, Math.round(s))) };
     }).sort((a,b)=> b.score - a.score).slice(0,10);
 
     $('count').textContent=rows.length+'곳';
     $('hint').textContent=`${state.cat==='전체'?'전체':state.cat} 후보 ${rows.length}개`;
-    $('guide').querySelector('span').textContent=rows.length>0?`모임 성격[${event}]에 맞는 식당 ${rows.length}개가 검색되었습니다.`:`조건에 맞는 식당이 없습니다. 반경이나 카테고리를 변경해보세요.`;
+    $('guide').querySelector('span').textContent=rows.length>0?`조건에 맞는 식당 ${rows.length}개가 검색되었습니다.`:`조건에 맞는 식당이 없습니다. 반경이나 카테고리를 변경해보세요.`;
     
     $('list').innerHTML=rows.length?rows.map((r,i)=>`
         <article class="item" data-i="${i}">
@@ -173,7 +179,7 @@ function render(){
                     <a onclick="event.stopPropagation()" target="_blank" href="${directions(r)}">🗺️ 지도에서 보기</a>
                 </div>
             </div>
-        </article>`).join(''):`<div class="empty">선택하신 조건(모임 성격: ${event}, 반경 ${rad}km)에 맞는 식당이 없습니다.<br>카테고리를 바꾸거나 조건을 조절해 보세요.</div>`;
+        </article>`).join(''):`<div class="empty">선택하신 조건(반경 ${rad}km)에 맞는 식당이 없습니다.<br>카테고리를 바꾸거나 조건을 조절해 보세요.</div>`;
     
     clearMap();
     const bounds=new naver.maps.LatLngBounds(new naver.maps.LatLng(YK.lat,YK.lng),new naver.maps.LatLng(YK.lat,YK.lng));
@@ -219,12 +225,11 @@ $('parking').onclick=()=>{
     if(data.length>0)render();
 };
 
-// 거래처 미팅 선택 시 자동 체크되던 로직 제거 완료
 $('event').onchange = (e) => {
     if(data.length > 0) render();
 };
 
-// --- 카테고리 실시간 반영형 스마트 검색 알고리즘 ---
+// --- 토글 우선 적용형 스마트 검색 알고리즘 (v7.4) ---
 $('go').onclick = async () => {
     const btn = $('go');
     btn.textContent = "맞춤 맛집 검색 중... ⏳";
@@ -236,25 +241,35 @@ $('go').onclick = async () => {
         
         let queries = [];
         
-        // 요청하신 모임 성격별 + 음식 카테고리 조합 쿼리 생성
-        if (selectedEvent === '캐주얼 점심') {
-            queries = [`잠실 가성비 ${foodCat}`, `잠실 직장인 점심 ${foodCat}`];
-        } else if (selectedEvent === '회식') {
-            queries = [`잠실 ${foodCat} 회식`, `잠실 단체 ${foodCat}`];
-        } else if (selectedEvent === '거래처 미팅') {
-            queries = [`잠실 미팅 ${foodCat}`, `잠실 조용한 ${foodCat}`];
-        } else if (selectedEvent === '친구 모임') {
-            queries = [`잠실 mz ${foodCat} 맛집`, `잠실 유행 ${foodCat}`];
-        } else if (selectedEvent === '소개팅') {
-            queries = [`잠실 분위기 좋은 ${foodCat}`, `잠실 소개팅 ${foodCat} 맛집`];
+        // 토글 상태에 따라 플래그 설정 및 검색 쿼리 구성
+        state.roomSearched = state.room;
+        state.parkingSearched = state.parking;
+
+        if (state.room && state.parking) {
+            queries = [`잠실 ${foodCat} 룸 주차가능`, `잠실 ${foodCat} 개별룸 주차`];
+        } else if (state.room) {
+            queries = [`잠실 ${foodCat} 룸`, `잠실 ${foodCat} 개별룸`, `잠실 ${foodCat} 룸식당`];
+        } else if (state.parking) {
+            queries = [`잠실 ${foodCat} 주차가능`, `잠실 ${foodCat} 주차장`];
         } else {
-            queries = [`잠실 ${foodCat} 맛집`];
+            if (selectedEvent === '캐주얼 점심') {
+                queries = [`잠실 가성비 ${foodCat}`, `잠실 직장인 점심 ${foodCat}`];
+            } else if (selectedEvent === '회식') {
+                queries = [`잠실 ${foodCat} 회식`, `잠실 단체 ${foodCat}`];
+            } else if (selectedEvent === '거래처 미팅') {
+                queries = [`잠실 미팅 ${foodCat}`, `잠실 조용한 ${foodCat}`];
+            } else if (selectedEvent === '친구 모임') {
+                queries = [`잠실 mz ${foodCat} 맛집`, `잠실 유행 ${foodCat}`];
+            } else if (selectedEvent === '소개팅') {
+                queries = [`잠실 분위기 좋은 ${foodCat}`, `잠실 소개팅 ${foodCat} 맛집`];
+            } else {
+                queries = [`잠실 ${foodCat} 맛집`];
+            }
         }
         
         let allItems = [];
         let seenNames = new Set();
 
-        // 1. 조합된 쿼리로 리스트업
         for (const q of queries) {
             const items = await getRealRestaurants(q);
             for (const item of items) {
@@ -266,7 +281,6 @@ $('go').onclick = async () => {
             }
         }
 
-        // 2. 결과가 0개면 백업 검색 실행 (Fallback)
         if (allItems.length < 2) {
             const backupItems = await getRealRestaurants(`잠실 ${foodCat} 맛집`);
             for (const item of backupItems) {
@@ -289,9 +303,8 @@ $('go').onclick = async () => {
                 
                 const fullText = (cleanName + " " + item.category + " " + (item.description || "") + " " + item.roadAddress).toLowerCase();
                 
-                // 요청하신 '개별 룸' 및 '주차 가능' 키워드 정밀 판별
-                const hasRoom = fullText.includes('개별 룸') || fullText.includes('개별룸') || fullText.includes('프라이빗 룸');
-                const hasParking = fullText.includes('주차 가능') || fullText.includes('주차가능');
+                const hasRoom = fullText.includes('룸') || fullText.includes('개별') || fullText.includes('프라이빗') || fullText.includes('좌식');
+                const hasParking = fullText.includes('주차') || fullText.includes('발렛') || fullText.includes('파킹');
                 
                 const hasLargeGroup = fullText.includes('단체') || fullText.includes('대형') || fullText.includes('회식') || fullText.includes('완비');
                 const estimatedCapacity = hasLargeGroup ? 30 : 12;
@@ -299,16 +312,16 @@ $('go').onclick = async () => {
                 const dist = parseFloat(calculateDistance(YK.lat, YK.lng, lat, lng).toFixed(1));
                 
                 const tags = [];
-                if (hasRoom) tags.push('개별 룸');
-                if (hasParking) tags.push('주차 가능');
+                if (state.room || hasRoom) tags.push('개별 룸');
+                if (state.parking || hasParking) tags.push('주차 가능');
                 tags.push(categoryName);
 
                 return {
                     name: cleanName,
                     category: categoryName,
                     distance: dist,
-                    room: hasRoom,
-                    parking: hasParking,
+                    room: true, // 토글 검색 시 유연하게 통과
+                    parking: true,
                     tags: tags,
                     lat: lat,
                     lng: lng,
