@@ -44,7 +44,7 @@ const $=x=>document.getElementById(x),won=n=>new Intl.NumberFormat('ko-KR').form
     async function getRealRestaurants(keyword){
 
     const response = await fetch(
-      `https://yk-restaurant-api.gksthf0709.workers.dev/?q=${encodeURIComponent(keyword)}`
+        `https://yk-restaurant-api.gksthf0709.workers.dev/?q=${encodeURIComponent(keyword)}`
     );
 
     const result = await response.json();
