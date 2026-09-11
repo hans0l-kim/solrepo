@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>YK Team Dinner Planner v5.2</title>
+<title>YK Team Dinner Planner v6.0</title>
 <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qpwpk81lu0"></script>
 <style>
 :root{--y:#ffd43b;--ink:#28261b;--muted:#746e58;--line:#e4d8a5;--green:#147154;--red:#c7463b;--shadow:0 14px 38px #44360018}
@@ -19,10 +19,9 @@
 </head>
 <body>
 <header class="top"><div class="topin"><div class="brand"><div class="logo">🍽️</div><div><h1>YK Team Dinner Planner</h1><p>우리 모임에 맞는 장소를 30초 만에</p></div></div><div class="loc">📍 서울시 송파구 올림픽로 300 기준</div></div></header>
-<main class="app"><aside class="panel"><h2>모임 조건 설정</h2><p class="hint">참석 인원, 모임 성격, 룸 및 주차 조건을 반영해 최적의 장소를 추천합니다.</p>
+<main class="app"><aside class="panel"><h2>모임 조건 설정</h2><p class="hint">참석 인원, 모임 성격에 맞춰 최적의 장소를 추천합니다.</p>
 <div class="sec"><label class="label">👥 참석 인원</label><div class="people"><input id="people" class="input" type="number" min="2" max="50" value="12"><div class="unit">명</div></div><div id="size" class="size"></div></div>
-<div class="sec"><label class="label">🎯 모임 성격</label><select id="event" class="select"><option>팀 점심</option><option selected>회식</option><option>거래처 미팅</option><option>동기 모임</option><option>환영회/송별회</option></select></div>
-<div class="sec"><label class="label">🔊 원하는 분위기</label><select id="atmos" class="select"><option>조용함</option><option selected>적당히 시끄러움</option><option>왁자지껄</option></select></div>
+<div class="sec"><label class="label">🎯 모임 성격</label><select id="event" class="select"><option value="팀 점심">팀 점심 (가성비·짧은 동선)</option><option value="회식" selected>회식 (대규모·적당한 소음)</option><option value="거래처 미팅">거래처 미팅 (룸·주차·조용함)</option><option value="동기 모임">동기 모임 (트렌디·MZ 감성)</option><option value="환영회/송별회">환영회/송별회 (특별한 메뉴·건배사)</option></select></div>
 <div class="sec"><label class="label">🍜 음식 및 주류 카테고리</label><div id="chips" class="chips"></div></div>
 <div class="sec"><div class="rangeTop"><span>📍 검색 반경 (도보 기준)</span><span><b id="rtext">3</b>km</span></div><input id="radius" class="range" type="range" min="1" max="5" value="3"></div>
 <div class="sec toggles"><button id="room" class="toggle">🚪 룸 필수</button><button id="parking" class="toggle">🚗 주차 필수</button></div><button id="go" class="go">🔍 맞춤 장소 추천</button></aside>
@@ -45,8 +44,56 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
               Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
               Math.sin(dLon/2) * Math.sin(dLon/2);
     const straight = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    // 도심 도보 우회 계수(1.3배)를 곱하여 실제 도보 이동 거리 계산
-    return straight * 1.3;
+    return straight * 1.3; // 도보 우회 계수
+}
+
+// 엄격한 카테고리 분류 함수 (한식에 고기/일식이 섞이는 현상 원천 차단)
+function matchesCategory(categoryStr, titleStr, targetCat) {
+    const full = (categoryStr + " " + titleStr).toLowerCase();
+    
+    if (targetCat === '전체') return true;
+    
+    if (targetCat === '고기') {
+        return full.includes('고기') || full.includes('육류') || full.includes('삼겹살') || full.includes('구이') || 
+               full.includes('한우') || full.includes('갈비') || full.includes('곱창') || full.includes('막창') || full.includes('족발');
+    }
+    if (targetCat === '한식') {
+        const isMeat = full.includes('고기') || full.includes('육류') || full.includes('삼겹살') || full.includes('구이') || full.includes('한우') || full.includes('갈비') || full.includes('곱창');
+        const isOther = full.includes('일식') || full.includes('초밥') || full.includes('중식') || full.includes('양식') || 
+                        full.includes('파스타') || full.includes('이자카야') || full.includes('치킨') || full.includes('호프') || 
+                        full.includes('포차') || full.includes('bar') || full.includes('샤브샤브');
+        const isKoreanKeyword = full.includes('한식') || full.includes('백반') || full.includes('국밥') || full.includes('찌개') || 
+                                full.includes('냉면') || full.includes('칼국수') || full.includes('정식') || full.includes('보쌈') || full.includes('감자탕');
+        return (isKoreanKeyword || full.includes('음식점>한식')) && !isMeat && !isOther;
+    }
+    if (targetCat === '중식') {
+        return full.includes('중식') || full.includes('중화') || full.includes('짜장') || full.includes('짬뽕') || full.includes('양꼬치');
+    }
+    if (targetCat === '일식') {
+        return full.includes('일식') || full.includes('초밥') || full.includes('스시') || full.includes('사시미') || full.includes('참치') || full.includes('돈카츠') || full.includes('라멘');
+    }
+    if (targetCat === '양식') {
+        return full.includes('양식') || full.includes('이탈리안') || full.includes('파스타') || full.includes('피자') || full.includes('스테이크') || full.includes('비스트로');
+    }
+    if (targetCat === '샤브샤브') {
+        return full.includes('샤브') || full.includes('편백찜');
+    }
+    if (targetCat === '치킨') {
+        return (full.includes('치킨') || full.includes('통닭')) && !full.includes('호프');
+    }
+    if (targetCat === '이자카야') {
+        return full.includes('이자카야') || full.includes('야키토리') || full.includes('사케');
+    }
+    if (targetCat === 'Bar') {
+        return full.includes('바') || full.includes('위스키') || full.includes('칵테일') || full.includes('와인');
+    }
+    if (targetCat === '호프') {
+        return full.includes('호프') || full.includes('맥주') || full.includes('펍');
+    }
+    if (targetCat === '포차') {
+        return full.includes('포차') || full.includes('포장마차');
+    }
+    return full.includes(targetCat.toLowerCase());
 }
 
 async function getRealRestaurants(keyword){
@@ -90,24 +137,39 @@ function directions(r){return 'https://map.naver.com/p/search/'+encodeURICompone
 function clearMap(){markers.forEach(m=>m.setMap(null));markers=[];if(routeLine)routeLine.setMap(null);if(infoWindow)infoWindow.close()}
 
 function render(){
-    const n=people(),rad=+$('radius').value;
+    const n=people(),rad=+$('radius').value,event=$('event').value;
     $('range').textContent=rad+'km';
     $('scale').textContent=size(n);
     
-    // 도보 거리 반영된 값으로 반경 필터링
+    // 모임 성격별 가중치 및 필터 적용
     rows = data.filter(r => {
-        if (r.distance > rad) return false;
+        // 1. 반경 필터 (팀 점심일 경우 자동으로 1.2km 이내로 엄격 제한)
+        const maxDist = (event === '팀 점심') ? Math.min(rad, 1.2) : rad;
+        if (r.distance > maxDist) return false;
+
+        // 2. 카테고리 엄격 분리 필터
+        if (!matchesCategory(r.category, r.name, state.cat)) return false;
+
+        // 3. 거래처 미팅일 경우 룸 필수 자동 반영 유도 또는 하드필터
         if (state.room && !r.room) return false;
         if (state.parking && !r.parking) return false;
+
         return true;
     }).map(r => {
-        let s = 100 - (r.distance * 15);
+        let s = 100 - (r.distance * 12);
+        
+        // 모임 성격별 맞춤 가점 부여
+        if (event === '거래처 미팅' && r.room) s += 30;
+        if (event === '회식' && r.capacity >= n) s += 20;
+        if (event === '동기 모임' && ['이자카야', 'Bar', '양식', '호프'].includes(r.category)) s += 25;
+        if (event === '환영회/송별회' && ['고기', '일식', '양식'].includes(r.category)) s += 25;
+
         return { ...r, score: Math.max(1, Math.min(99, Math.round(s))) };
-    }).sort((a,b)=> a.distance - b.distance).slice(0,10);
+    }).sort((a,b)=> b.score - a.score).slice(0,10);
 
     $('count').textContent=rows.length+'곳';
     $('hint').textContent=`${state.cat==='전체'?'전체':state.cat} 후보 ${rows.length}개`;
-    $('guide').querySelector('span').textContent=rows.length>0?`도보 조건에 맞는 식당 ${rows.length}개가 검색되었습니다.`:`조건에 맞는 식당이 없습니다. 반경이나 조건을 넓혀보세요.`;
+    $('guide').querySelector('span').textContent=rows.length>0?`모임 성격[${event}]에 맞는 식당 ${rows.length}개가 검색되었습니다.`:`조건에 맞는 식당이 없습니다. 반경이나 카테고리를 변경해보세요.`;
     
     $('list').innerHTML=rows.length?rows.map((r,i)=>`
         <article class="item" data-i="${i}">
@@ -121,7 +183,7 @@ function render(){
                     <a onclick="event.stopPropagation()" target="_blank" href="${directions(r)}">🗺️ 지도에서 보기</a>
                 </div>
             </div>
-        </article>`).join(''):`<div class="empty">선택하신 조건(도보 반경 ${rad}km, 룸/주차 등)을 모두 충족하는 식당이 없습니다.<br>검색 반경을 넓히거나 조건을 조절해 보세요.</div>`;
+        </article>`).join(''):`<div class="empty">선택하신 조건(모임 성격: ${event}, 반경 ${rad}km)에 맞는 식당이 없습니다.<br>카테고리를 바꾸거나 조건을 조절해 보세요.</div>`;
     
     clearMap();
     const bounds=new naver.maps.LatLngBounds(new naver.maps.LatLng(YK.lat,YK.lng),new naver.maps.LatLng(YK.lat,YK.lng));
@@ -155,8 +217,27 @@ $('radius').oninput=()=>{
     if(data.length > 0) render();
 };
 
-$('room').onclick=()=>{state.room=!state.room;ctl();if(data.length>0)render();};
-$('parking').onclick=()=>{state.parking=!state.parking;ctl();if(data.length>0)render();};
+$('room').onclick=()=>{
+    state.room=!state.room;
+    ctl();
+    if(data.length>0)render();
+};
+
+$('parking').onclick=()=>{
+    state.parking=!state.parking;
+    ctl();
+    if(data.length>0)render();
+};
+
+// 모임 성격 바뀔 때 거래처 미팅이면 룸/주차 자동 켜기 UX 편의 기능 제공
+$('event').onchange = (e) => {
+    if(e.target.value === '거래처 미팅') {
+        state.room = true;
+        state.parking = true;
+        ctl();
+    }
+    if(data.length > 0) render();
+};
 
 $('go').onclick = async () => {
     const btn = $('go');
@@ -182,7 +263,6 @@ $('go').onclick = async () => {
                 const hasRoom = fullText.includes('룸') || fullText.includes('개별') || fullText.includes('단체석') || fullText.includes('프라이빗') || fullText.includes('좌식');
                 const hasParking = fullText.includes('주차') || fullText.includes('발렛') || fullText.includes('파킹');
                 
-                // 도보 우회 계수가 반영된 도보 거리 계산
                 const dist = parseFloat(calculateDistance(YK.lat, YK.lng, lat, lng).toFixed(1));
                 
                 const tags = [];
@@ -199,7 +279,8 @@ $('go').onclick = async () => {
                     tags: tags,
                     lat: lat,
                     lng: lng,
-                    address: item.roadAddress || item.address
+                    address: item.roadAddress || item.address,
+                    capacity: 20
                 };
             });
         } else {
