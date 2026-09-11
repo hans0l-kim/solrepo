@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>YK Team Dinner Planner v4.0</title>
+<title>YK Team Dinner Planner v4.1</title>
 <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=qpwpk81lu0"></script>
 <style>
 :root{--y:#ffd43b;--ink:#28261b;--muted:#746e58;--line:#e4d8a5;--green:#147154;--red:#c7463b;--shadow:0 14px 38px #44360018}
@@ -87,16 +87,15 @@ function directions(r){return 'https://map.naver.com/p/directions/'+YK.lng+','+Y
 function clearMap(){markers.forEach(m=>m.setMap(null));markers=[];if(routeLine)routeLine.setMap(null);if(infoWindow)infoWindow.close()}
 
 function render(){
-    const n=people(),rad=+$('radius').value,event=$('event').value,at=$('atmos').value;
+    const n=people(),rad=+$('radius').value,event=$('event').value;
     $('range').textContent=rad+'km';$('scale').textContent=size(n);
     
-    // 점수 산정 및 소프트 필터링 (가까운 거리, 룸/주차 매칭 우선)
     rows = data.filter(r => r.distance <= rad).map(r => {
         let s = 50;
-        s += Math.max(0, 30 - r.distance * 6); // 가까울수록 고득점
+        s += Math.max(0, 30 - r.distance * 6);
         if (state.room) s += r.room ? 25 : -25;
         if (state.parking) s += r.parking ? 20 : -20;
-        if (r.events.includes(event)) s += 10;
+        if (r.events && r.events.includes(event)) s += 10;
         return { ...r, score: Math.max(1, Math.min(99, Math.round(s))) };
     }).sort((a,b)=>b.score-a.score).slice(0,10);
     
@@ -169,8 +168,6 @@ $('go').onclick = async () => {
         const items = await getRealRestaurants(searchKeyword);
         
         if (items && items.length > 0) {
-            const reqPeople = people();
-            
             data = items.map((item) => {
                 const lng = parseInt(item.mapx) / 10000000;
                 const lat = parseInt(item.mapy) / 10000000;
@@ -199,7 +196,8 @@ $('go').onclick = async () => {
                     tags: tags,
                     lat: lat,
                     lng: lng,
-                    address: item.roadAddress || item.address
+                    address: item.roadAddress || item.address,
+                    events: [$ ('event').value, '회식'] // ★ 에러 방지용 이벤트 배열 추가
                 };
             });
         } else {
